@@ -1,6 +1,15 @@
 const board = document.getElementById("chessboard");
+let gameOver = false
 let selectedSquare = null
 let currentTurn = "w"
+let hasMoved = {
+    wk: false,
+    bk: false,
+    wkr: false,
+    wqr: false,
+    bkr: false,
+    bqr: false
+}
 
 function renderBoard() {
     board.innerHTML = "";
@@ -40,10 +49,12 @@ function handleSquareClick(event) {
 
     const clickedPiece = gameboard[row][col] 
 
-    if (!selectedSquare) {
+    if(gameOver) return;
 
-        if (!clickedPiece) return;
-        if (clickedPiece[0] !== currentTurn) return;
+    if(!selectedSquare) {
+
+        if(!clickedPiece) return;
+        if(clickedPiece[0] !== currentTurn) return;
 
         selectedSquare = {row, col};
 
@@ -57,15 +68,49 @@ function handleSquareClick(event) {
     const piece = gameboard[from.row][from.col]
 
     if(isLegalMove(piece, from, to)) {
-        gameboard[to.row][to.col] = gameboard[from.row][from.col]
-        gameboard[from.row][from.col] = null
+        const isCastleMove = piece[1] === "k" && Math.abs(to.col - from.col) === 2;
+
+        gameboard[to.row][to.col] = piece;
+        gameboard[from.row][from.col] = null;
+
+        promotePawn(piece, to.row, to.col)
+        markMoved(piece, from)
+        
+        if(isCastleMove) {
+            if(to.col === 6) {
+                const rook = gameboard[from.row][7];
+                gameboard[from.row][5] = gameboard[from.row][7];
+                gameboard[from.row][7] = null;
+
+                markMoved(rook, {row: from.row, col: 7})
+            }
+            
+            if(to.col === 2) {
+                const rook = gameboard[from.row][0];
+                gameboard[from.row][3] = gameboard[from.row][0];
+                gameboard[from.row][0] = null;
+
+                markMoved(rook, {row: from.row, col: 0})
+            }
+        }
 
         currentTurn = (currentTurn === "w" ? "b" : "w") 
-    } 
 
+        if(isCheckmate(currentTurn)) {
+            gameOver = true;
+            const winner = currentTurn === "w" ? "Black" : "White";
+            alert(`Checkmate! ${winner} wins!`);
+        }
+        else if(isKingInCheck(currentTurn)) {
+            alert("Check!");
+        }
+        else if(isStalemate(currentTurn)) {
+            gameOver = true;
+            alert("Stalemate! It's a draw!");
+        }
+    } 
     selectedSquare = null
     renderBoard();
 }
-
 
 renderBoard();

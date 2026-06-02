@@ -33,13 +33,8 @@ function isSquareAttacked(row, col, attackerColor) {
 
             const piece = gameboard[r][c]
 
-            if(!piece) {
-                continue;
-            }
-
-            if(piece[0] !== attackerColor) {
-                continue;
-            }
+            if(!piece) continue;
+            if(piece[0] !== attackerColor) continue;
 
             const from = {row: r, col: c} 
             const to = {row, col}
@@ -194,30 +189,97 @@ function isValidKingMove(piece, from, to) {
     const rowDiff = Math.abs(to.row - from.row)
     const colDiff = Math.abs(to.col - from.col)
 
-    if(rowDiff === 0 && colDiff === 0) {
+    if(rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0)) {
+        return !wouldLeaveKingInCheck(piece, from, to);
+    }
+
+    if(canCastle(piece, from, to)) {
+        return true;
+    }
+
+    return false;
+}
+
+
+// =============================================
+// Special Moves (Castling, En Passant, Promotion)
+// =============================================
+
+function canCastle(piece, from, to) {
+    const color = piece[0]
+    const row = color === "w" ? 7 : 0
+    const enemy = color === "w" ? "b" : "w"
+    const kingSideSquares = [4, 5, 6]
+    const queenSideSquares = [4, 3, 2]
+
+    if(isKingInCheck(color)) {
+        return false;   
+    }
+
+    if(to.row !== row || from.row !== row) {
         return false;
     }
 
-    if(rowDiff > 1 || colDiff > 1) {
+    if(Math.abs(to.col - from.col) !== 2) {
         return false;
     }
 
-    const enemyColor = piece[0] === "w" ? "b" : "w"
-    if(isSquareAttacked(to.row, to.col, enemyColor)) {
-        return false;
-    }
+    if(to.col === 6) {
+        const rook = gameboard[row][7]
+        
+        if(rook !== color + "r") return false;
+        
+        if(hasMoved[color + "k"]) return false;
+        if(color === "w" && hasMoved.wkr) return false;
+        if(color === "b" && hasMoved.bkr) return false;
+        
+        if(gameboard[row][5] || gameboard[row][6]) return false;
 
-    const enemyKing = findKing(enemyColor) 
-    if(enemyKing) {
-        const r = Math.abs(to.row - enemyKing.row)
-        const c = Math.abs(to.col - enemyKing.col)
-
-        if (r <= 1 && c <= 1) {
-            return false;
+        for(let c of kingSideSquares) {
+            if(isSquareAttacked(row, c, enemy)) {
+                return false;
+            }
         }
+
+        return true;
     }
 
-    return true;
+    if(to.col === 2) {
+        const rook = gameboard[row][0]
+
+        if(rook !== color + "r") return false;
+
+        if(hasMoved[color + "k"]) return false;
+        if(color === "w" && hasMoved.wqr) return false;
+        if(color === "b" && hasMoved.bqr) return false;
+        
+        if(gameboard[row][1] || gameboard[row][2] || gameboard[row][3]) return false;
+        
+        for(let c of queenSideSquares) {
+            if(isSquareAttacked(row, c, enemy)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+function promotePawn(piece, row, col) {
+    if(piece[1] !== "p") return false;
+    
+    const reachedEnd = (piece[0] === "w" && row === 0) || (piece[0] === "b" && row === 7)
+
+    if(!reachedEnd) {
+        return false;
+    }
+
+    const choice = prompt("Promote to (q, r, b, n):", "q")
+    const validChoices = ["q", "r", "b", "n"]
+
+    gameboard[row][col] = piece[0] + (validChoices.includes(choice) ? choice : "q")
 }
 
 
@@ -249,18 +311,29 @@ function isPathClear(from, to) {
     return true;
 }
 
+
 // =============================================
 // Check Logic
 // =============================================
 
-function findKing(color) {
-    const king = color + "k"
+function isCheckmate(color) {
+    return isKingInCheck(color) && !hasLegalMoves(color);
+}
 
+function isStalemate(color) {
+    return !isKingInCheck(color) && !hasLegalMoves(color);
+}
+
+function isKing(piece) {
+    return piece && piece[1] === "k";
+}
+
+function findKing(color) {
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
             const piece = gameboard[row][col]
 
-            if(piece === king) {
+            if(isKing(piece) && piece[0] === color) {
                 return {row, col}
             }
         }
@@ -294,13 +367,56 @@ function wouldLeaveKingInCheck(piece, from, to) {
     return isCheck;
 }
 
-function isAdjacentKing(to, enemyKingPos) {
-    const rowDiff = Math.abs(to.row - enemyKingPos.row)
-    const colDiff = Math.abs(to.col - enemyKingPos.col)
-
-    return rowDiff <= 1 && colDiff <= 1;
-}
-
 function isLegalMove(piece, from, to) {
     return isValidMove(piece, from, to) && !wouldLeaveKingInCheck(piece, from, to);
+}
+
+function hasLegalMoves(color) {
+    for (let fromRow = 0; fromRow < 8; fromRow++) {
+        for (let fromCol = 0; fromCol < 8; fromCol++) {
+            const piece = gameboard[fromRow][fromCol]
+            const from = {row: fromRow, col: fromCol}
+
+            if(!piece || piece[0] !== color) {
+                continue;
+            }
+
+            for (let toRow = 0; toRow < 8; toRow++) {
+                for (let toCol = 0; toCol < 8; toCol++) {
+                    const to = {row: toRow, col: toCol}
+
+                    if(isLegalMove(piece, from, to)) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+function markMoved(piece, from) {
+    if(!piece) {
+        return;
+    }
+
+    const color = piece[0]
+    const type = piece[1]
+
+    if(type === "k") {
+        hasMoved[color + "k"] = true;
+    }
+
+    if(type === "r") {
+        if(color === "w") {
+            if(from.col === 7) hasMoved["wkr"] = true;
+            if(from.col === 0) hasMoved["wqr"] = true;
+        }
+
+        if(color === "b") {
+            if(from.col === 7) hasMoved["bkr"] = true;
+            if(from.col === 0) hasMoved["bqr"] = true;
+        }
+    }
 }
