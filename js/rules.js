@@ -134,6 +134,16 @@ function isValidPawnMove(piece, from, to) {
         return true;
     }
 
+    if(Math.abs(to.col - from.col) === 1 && from.row + direction === to.row && !target && lastMove) {
+        const enemyPawn = gameboard[from.row][to.col]
+
+        if(enemyPawn && enemyPawn === lastMove.piece && enemyPawn[1] === "p" && 
+           enemyPawn[0] !== piece [0] && Math.abs(lastMove.from.row - lastMove.to.row) === 2 && 
+           lastMove.to.row === from.row && lastMove.to.col === to.col) {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -235,7 +245,7 @@ function canCastle(piece, from, to) {
         
         if(gameboard[row][5] || gameboard[row][6]) return false;
 
-        for(let c of kingSideSquares) {
+        for (let c of kingSideSquares) {
             if(isSquareAttacked(row, c, enemy)) {
                 return false;
             }
@@ -255,7 +265,7 @@ function canCastle(piece, from, to) {
         
         if(gameboard[row][1] || gameboard[row][2] || gameboard[row][3]) return false;
         
-        for(let c of queenSideSquares) {
+        for (let c of queenSideSquares) {
             if(isSquareAttacked(row, c, enemy)) {
                 return false;
             }
@@ -284,7 +294,7 @@ function promotePawn(piece, row, col) {
 
 
 // =============================================
-// Helpers
+// Helper Functions
 // =============================================
 
 function isFriendly(piece, target) {
@@ -311,9 +321,41 @@ function isPathClear(from, to) {
     return true;
 }
 
+function getPieces() {
+    const pieces = []
+
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = gameboard[row][col]
+
+            if(piece) {
+                pieces.push({piece, row, col})
+            }
+        }
+    }
+
+    return pieces;
+}
+
+function getLegalMovesForPiece(piece, from) {
+    const moves = []
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const to = { row: r, col: c }
+
+            if(isValidMove(piece, from, to)) {
+                moves.push(to)
+            }
+        }
+    }
+
+    return moves;
+}
+
 
 // =============================================
-// Check Logic
+// Check, Checkmate, Stalemate, and Insufficient Material Detection
 // =============================================
 
 function isCheckmate(color) {
@@ -355,6 +397,16 @@ function isKingInCheck(color) {
 
 function wouldLeaveKingInCheck(piece, from, to) {
     const captured = gameboard[to.row][to.col]
+    let enPassantCaptured = null
+
+    const isEnPassant = piece[1] === "p" && Math.abs(to.col - from.col) === 1 && !captured &&
+                        lastMove && Math.abs(lastMove.from.row - lastMove.to.row) === 2 && 
+                        lastMove.to.row === from.row && lastMove.to.col === to.col
+
+    if(isEnPassant) {
+        enPassantCaptured = gameboard[from.row][to.col]
+        gameboard[from.row][to.col] = null
+    }
 
     gameboard[to.row][to.col] = piece
     gameboard[from.row][from.col] = null
@@ -364,8 +416,56 @@ function wouldLeaveKingInCheck(piece, from, to) {
     gameboard[to.row][to.col] = captured
     gameboard[from.row][from.col] = piece
 
+    if(isEnPassant) {
+        gameboard[from.row][to.col] = enPassantCaptured
+    }
+
     return isCheck;
 }
+
+function isLightSquare(row, col) {
+    return (row + col) % 2 === 0;
+}
+
+function isInsufficientMaterial() {
+    const pieces = getPieces()
+
+    const nonKings = pieces.filter(p => p.piece[1] !== "k")
+
+    if(nonKings.length === 0) {
+        return true;
+    }
+
+    if(nonKings.length === 1) {
+        const type = nonKings[0].piece[1]
+        return type === "b" || type === "n";
+    }
+
+    if(nonKings.length === 2) {
+        const piece1 = nonKings[0]
+        const piece2 = nonKings[1]
+        const types = [piece1.piece[1], piece2.piece[1]].sort().join("")
+
+        if(types === "bb" && piece1.piece[0] !== piece2.piece[0]) {
+            return (isLightSquare(piece1.row, piece1.col) === isLightSquare(piece2.row, piece2.col));
+        }
+
+        if(types === "nn") {
+            return true;
+        }
+
+        if((types === "bn") || (types === "nb")) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+// =============================================
+// Move Legality and Game State Helpers
+// =============================================
 
 function isLegalMove(piece, from, to) {
     return isValidMove(piece, from, to) && !wouldLeaveKingInCheck(piece, from, to);

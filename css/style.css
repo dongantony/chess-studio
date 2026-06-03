@@ -29,3 +29,20 @@
 .selected {
     background-color: yellow;
 }
+
+.movehint {
+    position: relative;
+}
+
+.movehint::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+}
+
+.capturehint {
+    outline: 3px solid rgba(255, 0, 0, 0.4)
+}

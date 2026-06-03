@@ -1,7 +1,10 @@
 const board = document.getElementById("chessboard");
 let gameOver = false
+let lastMove = null
 let selectedSquare = null
 let currentTurn = "w"
+
+let highlightedMoves = []
 let hasMoved = {
     wk: false,
     bk: false,
@@ -30,6 +33,18 @@ function renderBoard() {
 
             square.dataset.row = row;
             square.dataset.col = col;
+            const isHighlighted = highlightedMoves.some(m => m.row === row && m.col === col)
+            const target = gameboard[row][col]
+
+            if(isHighlighted) {
+                if(target && target[0] !== currentTurn) {
+                    square.classList.add("capturehint")
+                } 
+                else {
+                    square.classList.add("movehint")
+                }
+            }
+
             square.addEventListener("click", handleSquareClick)
 
             const piece = gameboard[row][col];
@@ -41,6 +56,10 @@ function renderBoard() {
             board.appendChild(square);
         }
     }
+}
+
+function clearHighlights() {
+    highlightedMoves = []
 }
 
 function handleSquareClick(event) {
@@ -57,8 +76,11 @@ function handleSquareClick(event) {
         if(clickedPiece[0] !== currentTurn) return;
 
         selectedSquare = {row, col};
-
-        event.target.classList.add("selected");
+        
+        const piece = gameboard[row][col]
+        console.log("selected:", piece);
+        console.log("moves:", highlightedMoves);
+        highlightedMoves = getLegalMovesForPiece(piece, selectedSquare)
 
         return;
     }
@@ -69,9 +91,16 @@ function handleSquareClick(event) {
 
     if(isLegalMove(piece, from, to)) {
         const isCastleMove = piece[1] === "k" && Math.abs(to.col - from.col) === 2;
+        const isEnPassant = piece[1] === "p" && Math.abs(to.col - from.col) === 1 && !gameboard[to.row][to.col] &&
+                            lastMove && Math.abs(lastMove.from.row - lastMove.to.row) === 2 && 
+                            lastMove.to.row === from.row && lastMove.to.col === to.col
 
         gameboard[to.row][to.col] = piece;
         gameboard[from.row][from.col] = null;
+
+        if(isEnPassant) {
+            gameboard[from.row][to.col] = null
+        }
 
         promotePawn(piece, to.row, to.col)
         markMoved(piece, from)
@@ -94,6 +123,7 @@ function handleSquareClick(event) {
             }
         }
 
+        lastMove = {piece, from: {...from}, to: {...to}}
         currentTurn = (currentTurn === "w" ? "b" : "w") 
 
         if(isCheckmate(currentTurn)) {
@@ -101,15 +131,20 @@ function handleSquareClick(event) {
             const winner = currentTurn === "w" ? "Black" : "White";
             alert(`Checkmate! ${winner} wins!`);
         }
-        else if(isKingInCheck(currentTurn)) {
-            alert("Check!");
-        }
         else if(isStalemate(currentTurn)) {
             gameOver = true;
             alert("Stalemate! It's a draw!");
         }
+        else if(isInsufficientMaterial()) {
+            gameOver = true;
+            alert("Draw due to insufficient material!");
+        }
+        else if(isKingInCheck(currentTurn)) {
+            alert("Check!");
+        }
     } 
     selectedSquare = null
+    clearHighlights();
     renderBoard();
 }
 
