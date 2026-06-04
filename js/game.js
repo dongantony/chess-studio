@@ -3,8 +3,6 @@ let gameOver = false
 let lastMove = null
 let selectedSquare = null
 let currentTurn = "w"
-
-let highlightedMoves = []
 let hasMoved = {
     wk: false,
     bk: false,
@@ -33,24 +31,18 @@ function renderBoard() {
 
             square.dataset.row = row;
             square.dataset.col = col;
-            const isHighlighted = highlightedMoves.some(m => m.row === row && m.col === col)
-            const target = gameboard[row][col]
-
-            if(isHighlighted) {
-                if(target && target[0] !== currentTurn) {
-                    square.classList.add("capturehint")
-                } 
-                else {
-                    square.classList.add("movehint")
-                }
-            }
-
             square.addEventListener("click", handleSquareClick)
 
             const piece = gameboard[row][col];
 
             if(piece) {
-                square.textContent = pieces[piece]
+                const img = document.createElement("img");
+
+                img.src = pieces[piece];
+                img.alt = piece;
+                img.classList.add("piece");
+                
+                square.appendChild(img);
             }
 
             board.appendChild(square);
@@ -59,7 +51,39 @@ function renderBoard() {
 }
 
 function clearHighlights() {
-    highlightedMoves = []
+    document.querySelectorAll(".movehint, .capturehint").forEach(square => {
+        square.classList.remove("movehint", "capturehint");
+    });
+}
+
+function highlightLegalMoves(from) {
+    const piece = gameboard[from.row][from.col]
+
+    if(!piece) return;
+
+    const squares = document.querySelectorAll(".square");
+
+    for(let row = 0; row < 8; row++) {
+        for(let col = 0; col < 8; col++) {
+            const to = { row, col };
+
+            if(!isLegalMove(piece, from, to)) {
+                continue;
+            }
+
+            const index = row * 8 + col;
+            const square = squares[index];
+
+            const target = gameboard[row][col];
+
+            if(target && target[0] !== piece[0]) {
+                square.classList.add("capturehint");
+            } 
+            else {
+                square.classList.add("movehint");
+            }
+        }
+    }
 }
 
 function handleSquareClick(event) {
@@ -75,19 +99,32 @@ function handleSquareClick(event) {
         if(!clickedPiece) return;
         if(clickedPiece[0] !== currentTurn) return;
 
+        clearHighlights();
         selectedSquare = {row, col};
-        
-        const piece = gameboard[row][col]
-        console.log("selected:", piece);
-        console.log("moves:", highlightedMoves);
-        highlightedMoves = getLegalMovesForPiece(piece, selectedSquare)
+        event.target.classList.add("selected");
+        highlightLegalMoves(selectedSquare);
 
         return;
     }
 
     const from = selectedSquare
+    clearHighlights();
     const to = {row, col}
     const piece = gameboard[from.row][from.col]
+
+    if(clickedPiece && clickedPiece[0] === currentTurn) {
+        selectedSquare = { row, col };
+
+        renderBoard();
+
+        const squares = document.querySelectorAll(".square");
+        const index = row * 8 + col;
+
+        squares[index].classList.add("selected");
+        highlightLegalMoves(selectedSquare);
+        
+        return;
+    }
 
     if(isLegalMove(piece, from, to)) {
         const isCastleMove = piece[1] === "k" && Math.abs(to.col - from.col) === 2;

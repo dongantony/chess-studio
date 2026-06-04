@@ -1,19 +1,19 @@
 const pieces = {
     // black pieces
-    bp: "♟",
-    bn: "♞",
-    bb: "♝",
-    br: "♜",
-    bq: "♛",
-    bk: "♚",
+    bp: "img/black-pawn.png",
+    bn: "img/black-knight.png",
+    bb: "img/black-bishop.png",
+    br: "img/black-rook.png",
+    bq: "img/black-queen.png",
+    bk: "img/black-king.png",
 
     // white pieces
-    wp: "♙",
-    wn: "♘",
-    wb: "♗",
-    wr: "♖",
-    wq: "♕",
-    wk: "♔"
+    wp: "img/white-pawn.png",
+    wn: "img/white-knight.png",
+    wb: "img/white-bishop.png",
+    wr: "img/white-rook.png",
+    wq: "img/white-queen.png",
+    wk: "img/white-king.png"
 }
 
 const gameboard = [

@@ -337,22 +337,6 @@ function getPieces() {
     return pieces;
 }
 
-function getLegalMovesForPiece(piece, from) {
-    const moves = []
-
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const to = { row: r, col: c }
-
-            if(isValidMove(piece, from, to)) {
-                moves.push(to)
-            }
-        }
-    }
-
-    return moves;
-}
-
 
 // =============================================
 // Check, Checkmate, Stalemate, and Insufficient Material Detection
