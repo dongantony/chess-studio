@@ -7,34 +7,104 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="board-wrapper">
-        <div id="board-container">
-            <div id="rank-label">
-                <div>8</div>
-                <div>7</div>
-                <div>6</div>
-                <div>5</div>
-                <div>4</div>
-                <div>3</div>
-                <div>2</div>
-                <div>1</div>
+    <button id="sidebar-toggle">☰</button>
+    <div id="sidebar-overlay"></div>
+    <div id="app-layout">
+        <div id="board-wrapper">
+            <div id="board-container">
+                <div id="rank-label">
+                    <div>8</div>
+                    <div>7</div>
+                    <div>6</div>
+                    <div>5</div>
+                    <div>4</div>
+                    <div>3</div>
+                    <div>2</div>
+                    <div>1</div>
+                </div>
+
+                <div id="chessboard"></div>
+
+                <div id="file-label">
+                    <div>a</div>
+                    <div>b</div>
+                    <div>c</div>
+                    <div>d</div>
+                    <div>e</div>
+                    <div>f</div>
+                    <div>g</div>
+                    <div>h</div>
+                </div>
+            </div> 
+            <div id="status-container">
+                <div id="game-status"></div>
+
+                <!-- <div id="captured-container">
+                    <div class="captured-box black">
+                        <h3>White Captures</h3>
+                        <div class="captured-row" id="captured-black-row"></div>
+                    </div>
+
+                    <div class="captured-box white">
+                        <h3>Black Captures</h3>
+                        <div class="captured-row" id="captured-white-row"></div>
+                    </div>
+                </div> -->
+
+                <!-- <div id="material-status"></div> -->
+            </div>
+        </div>
+        <div id="sidebar">
+            <div id="tab-buttons">
+                <button class="tab-btn active" data-tab="history">
+                    Move History
+                </button>
+                <button class="tab-btn" data-tab="material">
+                    Material
+                </button>
+                <button class="tab-btn" data-tab="info">
+                    Game Info
+                </button>
             </div>
 
-            <div id="chessboard"></div>
-
-            <div id="file-label">
-                <div>a</div>
-                <div>b</div>
-                <div>c</div>
-                <div>d</div>
-                <div>e</div>
-                <div>f</div>
-                <div>g</div>
-                <div>h</div>
+            <div class="tab-content active" id="history-tab">
+                <ol id="move-history-list"></ol>
             </div>
-        </div> 
-        <div id="status-container">
-            <div id="game-status"></div>
+
+            <div class="tab-content" id="material-tab">
+                <div id="material-status">
+                    Equal Material
+                </div>
+            </div>
+
+            <div class="tab-content" id="info-tab">
+                <div id="captured-container">
+                    <div class="captured-box black">
+                        <h3>White Captures</h3>
+                        <div class="captured-row" id="captured-black-row"></div>
+                    </div>
+
+                    <div class="captured-box white">
+                        <h3>Black Captures</h3>
+                        <div class="captured-row" id="captured-white-row"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="promotion-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Choose Promotion</h3>
+
+                <div id="promotion-options">
+                    <button data-piece="q"></button>
+                    <button data-piece="r"></button>
+                    <button data-piece="b"></button>
+                    <button data-piece="n"></button>
+                </div>
+                
+                <button id="promotion-cancel">Cancel</button>
+            </div>
         </div>
     </div>
     

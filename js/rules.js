@@ -1,3 +1,12 @@
+let hasMoved = {
+    wk: false,
+    bk: false,
+    wkr: false,
+    wqr: false,
+    bkr: false,
+    bqr: false
+}
+
 // =============================================
 // Move Validation
 // =============================================
@@ -277,19 +286,16 @@ function canCastle(piece, from, to) {
     return false;
 }
 
-function promotePawn(piece, row, col) {
-    if(piece[1] !== "p") return false;
+async function promotePawn(piece, to) {
+    if(piece[1] !== "p") return null;
     
-    const reachedEnd = (piece[0] === "w" && row === 0) || (piece[0] === "b" && row === 7)
+    const reachedEnd = (piece[0] === "w" && to.row === 0) || (piece[0] === "b" && to.row === 7)
 
-    if(!reachedEnd) {
-        return false;
-    }
+    if(!reachedEnd) return null;
 
-    const choice = prompt("Promote to (q, r, b, n):", "q")
-    const validChoices = ["q", "r", "b", "n"]
+    const choice = await showPromotionModal(piece[0])
 
-    gameboard[row][col] = piece[0] + (validChoices.includes(choice) ? choice : "q")
+    return choice;
 }
 
 

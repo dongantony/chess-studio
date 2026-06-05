@@ -3,16 +3,11 @@ let currentTurn = "w"
 let gameOver = false
 let selectedSquare = null
 let lastMove = null
-let positionHistory = []
+let promotionInProgress = false
 let halfMoveClock = 0
-let hasMoved = {
-    wk: false,
-    bk: false,
-    wkr: false,
-    wqr: false,
-    bkr: false,
-    bqr: false
-}
+let positionHistory = []
+let capturedWhite = []
+let capturedBlack = []
 
 function renderBoard() {
     board.innerHTML = ""
@@ -50,6 +45,23 @@ function renderBoard() {
             board.appendChild(square)
         }
     }
+}
+
+function updateBoardSize() {
+    const mobileLayout = window.innerHeight <= 1100
+
+    const sidebarWidth = mobileLayout ? 0 : 320
+    const gap = mobileLayout ? 0 : 30
+    const pagePadding = 40
+    const minSize = 280
+
+    const availableWidth = window.innerWidth - sidebarWidth - gap - pagePadding
+    const availableHeight = window.innerHeight - 140
+
+    const boardSize = Math.min(availableWidth, availableHeight) * 0.95
+    const squareSize = Math.max(minSize / 8, boardSize / 8)
+
+    document.documentElement.style.setProperty("--square-size", `${squareSize}px`)
 }
 
 function clearHighlights() {
@@ -106,6 +118,115 @@ function deselectPiece() {
     highlightCheckedKing();
 }
 
+function showPromotionModal(color) {
+    promotionInProgress = true
+
+    return new Promise(r => {
+        const modal = document.getElementById("promotion-modal")
+        const buttons = document.querySelectorAll("#promotion-options button")
+        const cancelButton = document.getElementById("promotion-cancel")
+
+        buttons.forEach(button => {
+            const pieceType = button.dataset.piece
+            button.innerHTML = `<img src="${pieces[color + pieceType]}" alt="">`
+
+            button.onclick = () => {
+                modal.classList.add("hidden")
+                promotionInProgress = false
+                r(pieceType)
+            }
+        })
+
+        cancelButton.onclick = () => {
+            modal.classList.add("hidden")
+            promotionInProgress = false
+            r(null)
+        }
+
+        modal.classList.remove("hidden")
+    })
+}
+
+function pieceValue(piece) {
+    switch(piece[1]) {
+        case "p": 
+            return 1;
+        case "n": 
+            return 3;
+        case "b": 
+            return 3;
+        case "r": 
+            return 5;
+        case "q": 
+            return 9;
+        default: 
+            return 0;
+    }
+}
+
+function updateMaterialStatus() {
+    const status = document.getElementById("material-status")
+
+    const whiteScore = capturedWhite.reduce((sum,p) => sum + pieceValue(p), 0)
+    const blackScore = capturedBlack.reduce((sum,p) => sum + pieceValue(p), 0)
+    const diff = whiteScore - blackScore
+
+    if(diff > 0) {
+        status.textContent = `White +${diff}`
+    } 
+    else if(diff < 0) {
+        status.textContent = `Black +${Math.abs(diff)}`
+    } 
+    else {
+        status.textContent = "Equal material"
+    }
+}
+
+function countPieces(list) {
+    const map = {}
+
+    for(const p of list) {
+        const type = p[1]
+        map[type] = (map[type] || 0) + 1;
+    }
+
+    return map;
+}
+
+function renderCapturedPieces() {
+    const whiteBox = document.querySelector("#captured-white-row") 
+    const blackBox = document.querySelector("#captured-black-row") 
+
+    whiteBox.innerHTML = ""
+    blackBox.innerHTML = ""
+
+    const whiteCounts = countPieces(capturedWhite)
+    const blackCounts = countPieces(capturedBlack)
+
+    const pieceSymbols = {
+        p: "♟",
+        n: "♞",
+        b: "♝",
+        r: "♜",
+        q: "♛"
+    }
+
+    const renderSide = (box, counts) => {
+        for (const type in counts) {
+            const wrapper = document.createElement("div")
+
+            const label = document.createElement("span")
+            label.textContent = `${pieceSymbols[type]} x${counts[type]}`
+
+            wrapper.appendChild(label)
+            box.appendChild(wrapper)
+        }
+    };
+
+    renderSide(whiteBox, whiteCounts)
+    renderSide(blackBox, blackCounts)
+}
+
 function updateGameStatus(message = null) {
     const status = document.getElementById("game-status") 
 
@@ -117,13 +238,14 @@ function updateGameStatus(message = null) {
     status.textContent = currentTurn === "w" ? "White's turn" : "Black's turn"
 }
 
-function handleSquareClick(event) {
-    const row = Number(event.target.dataset.row)
-    const col = Number(event.target.dataset.col)
+async function handleSquareClick(event) {
+    const row = Number(event.currentTarget.dataset.row)
+    const col = Number(event.currentTarget.dataset.col)
 
     const clickedPiece = gameboard[row][col] 
 
     if(gameOver) return;
+    if(promotionInProgress) return;
 
     if(!selectedSquare) {
 
@@ -132,7 +254,7 @@ function handleSquareClick(event) {
 
         clearHighlights();
         selectedSquare = {row, col}
-        event.target.classList.add("selected")
+        event.currentTarget.classList.add("selected")
         highlightLegalMoves(selectedSquare);
 
         return;
@@ -169,15 +291,50 @@ function handleSquareClick(event) {
                             lastMove && Math.abs(lastMove.from.row - lastMove.to.row) === 2 && 
                             lastMove.to.row === from.row && lastMove.to.col === to.col
 
+        let promotionChoice = null
+
+        if(piece[1] === "p") {
+            promotionChoice = await promotePawn(piece, to)
+
+            if(promotionChoice == null && (to.row === 0 || to.row === 7)) {
+                deselectPiece();
+                return;
+            }
+        }
+
         const capturedPiece = gameboard[to.row][to.col]
+
+        if(capturedPiece) {
+            if(capturedPiece[0] === "w") {
+                capturedWhite.push(capturedPiece)
+            }
+            else {
+                capturedBlack.push(capturedPiece)
+            }
+        }
+
         gameboard[to.row][to.col] = piece
         gameboard[from.row][from.col] = null
 
+        if(piece[1] === "p" && promotionChoice) {
+            gameboard[to.row][to.col] = piece[0] + promotionChoice
+        }
+
         if(isEnPassant) {
+            const captured = gameboard[from.row][to.col]
+
+            if(captured) {
+                if(captured[0] === "w") {
+                    capturedWhite.push(captured)
+                } 
+                else {
+                    capturedBlack.push(captured)
+                }
+            }
+
             gameboard[from.row][to.col] = null
         }
 
-        promotePawn(piece, to.row, to.col)
         markMoved(piece, from)
         
         if(isCastleMove) {
@@ -239,9 +396,49 @@ function handleSquareClick(event) {
     selectedSquare = null
     clearHighlights();
     renderBoard();
+    renderCapturedPieces();
+    updateMaterialStatus();
     highlightCheckedKing();
 }
 
 renderBoard();
+renderCapturedPieces();
+// updateMaterialStatus();
 updateGameStatus();
 positionHistory.push(getPositionKey());
+
+updateBoardSize();
+window.addEventListener("resize", updateBoardSize)
+
+document.addEventListener("DOMContentLoaded", () => {
+   const sidebar = document.getElementById("sidebar")
+   const sidebarToggle = document.getElementById("sidebar-toggle")
+   const overlay = document.getElementById("sidebar-overlay")
+   
+   sidebarToggle.addEventListener("click", () => {
+        sidebar.classList.toggle("open")
+        overlay.classList.toggle("show")
+   })
+
+   overlay.addEventListener("click", () => {
+        sidebar.classList.toggle("open")
+        overlay.classList.toggle("show")
+   })
+})
+
+document.querySelectorAll(".tab-btn").forEach(button => {
+    button.addEventListener("click", () => {
+
+        document.querySelectorAll(".tab-btn")
+            .forEach(btn => btn.classList.remove("active"))
+
+        document.querySelectorAll(".tab-content")
+            .forEach(tab => tab.classList.remove("active"))
+
+        button.classList.add("active")
+
+        document
+            .getElementById(`${button.dataset.tab}-tab`)
+            .classList.add("active")
+    })
+})
