@@ -446,6 +446,31 @@ function isInsufficientMaterial() {
     return false;
 }
 
+function getPositionKey() {
+    const enPassantSquare = lastMove && lastMove.piece[1] === "p" &&
+                            Math.abs(lastMove.from.row - lastMove.to.row) === 2 ?
+                            { row: (lastMove.from.row + lastMove.to.row) / 2, col: lastMove.to.col } : null
+
+    return JSON.stringify({board: gameboard, turn: currentTurn, castling: hasMoved, enPassant: enPassantSquare});
+}
+
+function isThreefoldRepetition() {
+    const current = getPositionKey()
+    let count = 0
+
+    for (const pos of positionHistory) {
+        if(pos === current) {
+            count++
+
+            if(count >= 3) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
 
 // =============================================
 // Move Legality and Game State Helpers

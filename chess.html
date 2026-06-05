@@ -7,7 +7,36 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="chessboard"></div>
+    <div id="board-wrapper">
+        <div id="board-container">
+            <div id="rank-label">
+                <div>8</div>
+                <div>7</div>
+                <div>6</div>
+                <div>5</div>
+                <div>4</div>
+                <div>3</div>
+                <div>2</div>
+                <div>1</div>
+            </div>
+
+            <div id="chessboard"></div>
+
+            <div id="file-label">
+                <div>a</div>
+                <div>b</div>
+                <div>c</div>
+                <div>d</div>
+                <div>e</div>
+                <div>f</div>
+                <div>g</div>
+                <div>h</div>
+            </div>
+        </div> 
+        <div id="status-container">
+            <div id="game-status"></div>
+        </div>
+    </div>
     
     <script src="js/rules.js"></script>
     <script src="js/chess-set.js"></script>
