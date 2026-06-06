@@ -395,7 +395,7 @@ async function handleSquareClick(event) {
         let enPassantCapturedPiece = null
 
         if(isEnPassant) {
-            enPassantCapturedPiece = gameboard[from.row][to.movingColor]
+            enPassantCapturedPiece = gameboard[from.row][to.col]
         }
 
         let promotionChoice = null
@@ -465,6 +465,22 @@ async function handleSquareClick(event) {
         const capturedPieceFinal = isEnPassant ? enPassantCapturedPiece : capturedPiece
         addMoveToHistory(piece, from, to, capturedPieceFinal, promotionChoice, isCastleMove, isEnPassant)
 
+        let soundsToPlay = sounds.move
+        const soundTurnCheck = piece[0] === "w" ? "b" : "w"
+
+        if(isKingInCheck(soundTurnCheck)) {
+            soundsToPlay = sounds.check;
+        }
+        else if(isCastleMove) {
+            soundsToPlay = sounds.castle    
+        }
+        else if(promotionChoice) {
+            soundsToPlay = sounds.promote
+        }
+        else if(capturedPiece || isEnPassant) {
+            soundsToPlay = sounds.capture
+        }
+
         lastMove = {piece, from: {...from}, to: {...to}}
 
         if(piece[1] === "p" || capturedPiece || isEnPassant) {
@@ -480,28 +496,35 @@ async function handleSquareClick(event) {
 
         if(isCheckmate(currentTurn)) {
             gameOver = true
+            soundsToPlay = sounds.gameover
             const winner = currentTurn === "w" ? "Black" : "White"
             updateGameStatus(`Checkmate! ${winner} wins!`);
         }
         else if(isStalemate(currentTurn)) {
             gameOver = true
+            soundsToPlay = sounds.gameover
             updateGameStatus("Stalemate! It's a draw!");
         }
         else if(isInsufficientMaterial()) {
             gameOver = true
+            soundsToPlay = sounds.gameover
             updateGameStatus("Draw due to insufficient material!");
         }
         else if(halfMoveClock >= 100) {
             gameOver = true
+            soundsToPlay = sounds.gameover
             updateGameStatus("Draw by fifty-move rule");
         }
         else if(isThreefoldRepetition()) {
             gameOver = true
+            soundsToPlay = sounds.gameover
             updateGameStatus("Draw by threefold repetition!")
         }
         else if(isKingInCheck(currentTurn)) {
             updateGameStatus("Check!");
         }
+
+        playSound(soundsToPlay);
     } 
     selectedSquare = null
     clearHighlights();
@@ -510,6 +533,12 @@ async function handleSquareClick(event) {
     updateMaterialStatus();
     highlightCheckedKing();
 }
+
+function playSound(sound) {
+    sound.currentTime = 0
+    sound.play();
+}
+
 
 renderBoard();
 renderCapturedPieces();

@@ -16,6 +16,15 @@ const pieces = {
     wk: "img/white-king.png"
 }
 
+const sounds = {
+    move: new Audio("audio/move.mp3"),
+    capture: new Audio("audio/capture.mp3"),
+    castle: new Audio("audio/castle.mp3"),
+    check: new Audio("audio/check.mp3"),
+    promote: new Audio("audio/promote.mp3"),
+    gameover: new Audio("audio/gameover.mp3")
+}
+
 const gameboard = [
     ["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
     ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
