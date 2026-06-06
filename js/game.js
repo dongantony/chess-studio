@@ -6,8 +6,14 @@ let lastMove = null
 let promotionInProgress = false
 let halfMoveClock = 0
 let positionHistory = []
+let moveHistory = []
 let capturedWhite = []
 let capturedBlack = []
+
+
+// =============================================
+// UI Rendering and Updates
+// =============================================
 
 function renderBoard() {
     board.innerHTML = ""
@@ -147,6 +153,72 @@ function showPromotionModal(color) {
     })
 }
 
+function renderCapturedPieces() {
+    const whiteBox = document.querySelector("#captured-white-row") 
+    const blackBox = document.querySelector("#captured-black-row") 
+
+    whiteBox.innerHTML = ""
+    blackBox.innerHTML = ""
+
+    const whiteCounts = countPieces(capturedWhite)
+    const blackCounts = countPieces(capturedBlack)
+
+    const pieceSymbols = {
+        w: {
+            p: "img/white-pawn.png",
+            n: "img/white-knight.png",
+            b: "img/white-bishop.png",
+            r: "img/white-rook.png",
+            q: "img/white-queen.png"
+            },
+
+        b: {
+            p: "img/black-pawn.png",
+            n: "img/black-knight.png",
+            b: "img/black-bishop.png",
+            r: "img/black-rook.png",
+            q: "img/black-queen.png"
+        }
+    }
+
+    const renderSide = (box, counts, color) => {
+        for (const type in counts) {
+            const wrapper = document.createElement("div")
+
+            const img = document.createElement("img")
+            img.src = pieceSymbols[color][type]
+            img.alt = type
+            img.classList.add("captured-piece")
+
+            const label = document.createElement("span")
+            label.textContent = ` x${counts[type]}`
+
+            wrapper.appendChild(img)
+            wrapper.appendChild(label)
+            box.appendChild(wrapper)
+        }
+    };
+
+    renderSide(whiteBox, whiteCounts, "b")
+    renderSide(blackBox, blackCounts, "w")
+}
+
+function updateGameStatus(message = null) {
+    const status = document.getElementById("game-status") 
+
+    if(message) {
+        status.textContent = message
+        return;
+    }
+
+    status.textContent = currentTurn === "w" ? "White's turn" : "Black's turn"
+}
+
+
+// =============================================
+// Game Information Helper Function
+// =============================================
+
 function pieceValue(piece) {
     switch(piece[1]) {
         case "p": 
@@ -193,50 +265,79 @@ function countPieces(list) {
     return map;
 }
 
-function renderCapturedPieces() {
-    const whiteBox = document.querySelector("#captured-white-row") 
-    const blackBox = document.querySelector("#captured-black-row") 
+function formatSquares(row, col) {
+    const files = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    return files[col] + (8 - row);
+}
 
-    whiteBox.innerHTML = ""
-    blackBox.innerHTML = ""
-
-    const whiteCounts = countPieces(capturedWhite)
-    const blackCounts = countPieces(capturedBlack)
-
-    const pieceSymbols = {
-        p: "♟",
-        n: "♞",
-        b: "♝",
-        r: "♜",
-        q: "♛"
+function addMoveToHistory(piece, from, to, capturedPiece, promotionChoice, isCastleMove, isEnPassant) {
+    const pieceLetters = {
+        p: "",
+        n: "N",
+        b: "B",
+        r: "R",
+        q: "Q",
+        k: "K"
     }
 
-    const renderSide = (box, counts) => {
-        for (const type in counts) {
-            const wrapper = document.createElement("div")
+    let moveText = ""
 
-            const label = document.createElement("span")
-            label.textContent = `${pieceSymbols[type]} x${counts[type]}`
-
-            wrapper.appendChild(label)
-            box.appendChild(wrapper)
+    if(isCastleMove) {
+        moveText = to.col === 6 ? "O-O" : "O-O-O"
+    }
+    else {
+        const pieceLetter = pieceLetters[piece[1]]
+        const isCapture = capturedPiece || isEnPassant
+        
+        if(piece[1] === "p") {
+            if(isCapture) {
+                const file = "abcdefgh"[from.col]
+                moveText = file + "x" + formatSquares(to.row, to.col)
+            }
+            else {
+                moveText = formatSquares(to.row, to.col)
+            }
         }
-    };
+        else {
+            moveText = pieceLetter + (isCapture ? "x" : "") + formatSquares(to.row, to.col)
+        }
 
-    renderSide(whiteBox, whiteCounts)
-    renderSide(blackBox, blackCounts)
-}
-
-function updateGameStatus(message = null) {
-    const status = document.getElementById("game-status") 
-
-    if(message) {
-        status.textContent = message
-        return;
+        if(promotionChoice) {
+            moveText += "=" + promotionChoice.toUpperCase();
+        }
     }
 
-    status.textContent = currentTurn === "w" ? "White's turn" : "Black's turn"
+    const movingColor = piece[0]
+    const enemyColor = piece[0] === "w" ? "b" : "w"
+
+    if(isCheckmate(enemyColor)) {
+        moveText += "#"
+    } 
+    else if(isKingInCheck(enemyColor)){
+        moveText += "+"
+    }
+
+    moveHistory.push(moveText)
+    renderMoveHistory();
 }
+
+function renderMoveHistory() {
+    const list = document.getElementById("move-history-list")
+    list.innerHTML = ""
+
+    moveHistory.forEach(move => {
+        const li = document.createElement("li")
+        li.textContent = move
+        list.appendChild(li)
+    })
+
+    list.scrollTop = list.scrollHeight;
+}
+
+
+// =============================================
+//  Interacting with UI
+// =============================================
 
 async function handleSquareClick(event) {
     const row = Number(event.currentTarget.dataset.row)
@@ -290,6 +391,12 @@ async function handleSquareClick(event) {
         const isEnPassant = piece[1] === "p" && Math.abs(to.col - from.col) === 1 && !gameboard[to.row][to.col] &&
                             lastMove && Math.abs(lastMove.from.row - lastMove.to.row) === 2 && 
                             lastMove.to.row === from.row && lastMove.to.col === to.col
+
+        let enPassantCapturedPiece = null
+
+        if(isEnPassant) {
+            enPassantCapturedPiece = gameboard[from.row][to.movingColor]
+        }
 
         let promotionChoice = null
 
@@ -355,6 +462,9 @@ async function handleSquareClick(event) {
             }
         }
 
+        const capturedPieceFinal = isEnPassant ? enPassantCapturedPiece : capturedPiece
+        addMoveToHistory(piece, from, to, capturedPieceFinal, promotionChoice, isCastleMove, isEnPassant)
+
         lastMove = {piece, from: {...from}, to: {...to}}
 
         if(piece[1] === "p" || capturedPiece || isEnPassant) {
@@ -403,7 +513,6 @@ async function handleSquareClick(event) {
 
 renderBoard();
 renderCapturedPieces();
-// updateMaterialStatus();
 updateGameStatus();
 positionHistory.push(getPositionKey());
 
