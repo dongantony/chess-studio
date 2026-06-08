@@ -4,11 +4,18 @@ let gameOver = false
 let selectedSquare = null
 let lastMove = null
 let promotionInProgress = false
+let boardFlipped = false
 let halfMoveClock = 0
 let positionHistory = []
 let moveHistory = []
 let capturedWhite = []
 let capturedBlack = []
+let gameStats = {
+    captures: 0,
+    checks: 0,
+    castles: 0,
+    promotions: 0
+}
 
 
 // =============================================
@@ -18,9 +25,11 @@ let capturedBlack = []
 function renderBoard() {
     board.innerHTML = ""
 
-    for (let row = 0; row < 8; row++) {
-        for (let col = 0; col < 8; col++) {
+    for (let displayRow = 0; displayRow < 8; displayRow++) {
+        for (let displayCol = 0; displayCol < 8; displayCol++) {
             
+            const row = boardFlipped ? 7 - displayRow : displayRow
+            const col = boardFlipped ? 7 - displayCol : displayCol
             const square = document.createElement("div")
 
             square.classList.add("square")
@@ -76,6 +85,10 @@ function clearHighlights() {
     });
 }
 
+function getSquareElement(row, col) {
+        return document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`)
+}
+
 function highlightLegalMoves(from) {
     const piece = gameboard[from.row][from.col]
 
@@ -91,9 +104,7 @@ function highlightLegalMoves(from) {
                 continue;
             }
 
-            const index = row * 8 + col
-            const square = squares[index]
-
+            const square = getSquareElement(row, col)
             const target = gameboard[row][col]
 
             if(target && target[0] !== piece[0]) {
@@ -113,8 +124,7 @@ function highlightCheckedKing() {
 
     if(!king) return;
 
-    const index = king.row * 8 + king.col
-    document.querySelectorAll(".square")[index].classList.add("incheck")
+    getSquareElement(king.row, king.col)?.classList.add("incheck")
 }
 
 function deselectPiece() {
@@ -199,8 +209,8 @@ function renderCapturedPieces() {
         }
     };
 
-    renderSide(whiteBox, whiteCounts, "b")
-    renderSide(blackBox, blackCounts, "w")
+    renderSide(whiteBox, whiteCounts, "w")
+    renderSide(blackBox, blackCounts, "b")
 }
 
 function updateGameStatus(message = null) {
@@ -212,6 +222,75 @@ function updateGameStatus(message = null) {
     }
 
     status.textContent = currentTurn === "w" ? "White's turn" : "Black's turn"
+}
+
+function updateGameInfo() {
+    document.getElementById("info-move").textContent = Math.floor(moveHistory.length / 2) + 1
+    document.getElementById("info-last-move").textContent = moveHistory.length ? moveHistory[moveHistory.length - 1] : "None"
+    document.getElementById("stats-capture").textContent = gameStats.captures   
+    document.getElementById("stats-check").textContent = gameStats.checks
+    document.getElementById("stats-castle").textContent = gameStats.castles
+    document.getElementById("stats-promotions").textContent = gameStats.promotions       
+
+    const max = 100
+    const progress = Math.min(halfMoveClock, max)
+    const percent = (progress / max) * 100 
+    const bar = document.getElementById("halfmove-progress")
+    const text = document.getElementById("halfmove-text")
+    
+    bar.style.width = `${percent}%`
+    text.textContent = `${Math.floor(percent)}%`
+
+    if(progress < 50) {
+        bar.style.background = "linear-gradient(90deg, #5fa84a, #7ed957)"
+    }
+    else if(progress < 80) {
+        bar.style.background = "linear-gradient(90deg,#e0c34f,#ffd84d)"
+    }
+    else {
+        bar.style.background = "linear-gradient(90deg,#d9534f,#ff6b6b)"
+    }
+}
+
+function updateFileLabels() {
+    const files = boardFlipped 
+            ? ["h", "g", "f", "e", "d", "c", "b", "a"]
+            : ["a", "b", "c", "d", "e", "f", "g", "h"]
+    
+    const container = document.getElementById("file-label")
+    
+    container.innerHTML = ""
+
+    files.forEach(file => {
+        const div = document.createElement("div")
+        div.textContent = file
+        container.appendChild(div)
+    })
+}
+
+function updateRankLabels() {
+    const ranks = boardFlipped 
+            ? ["1", "2", "3", "4", "5", "6", "7", "8"]
+            : ["8", "7", "6", "5", "4", "3", "2", "1"]
+    
+    const container = document.getElementById("rank-label")
+    
+    container.innerHTML = ""
+
+    ranks.forEach(rank => {
+        const div = document.createElement("div")
+        div.textContent = rank
+        container.appendChild(div)
+    })
+}
+
+function flipBoard() {
+    boardFlipped = !boardFlipped
+
+    renderBoard();
+    updateFileLabels();
+    updateRankLabels();
+    highlightCheckedKing();
 }
 
 
@@ -325,11 +404,40 @@ function renderMoveHistory() {
     const list = document.getElementById("move-history-list")
     list.innerHTML = ""
 
-    moveHistory.forEach(move => {
-        const li = document.createElement("li")
-        li.textContent = move
-        list.appendChild(li)
-    })
+    for(let i = 0; i < moveHistory.length; i+= 2) {
+        const moveNumber = Math.floor(i / 2) + 1
+
+        const whiteMove = moveHistory[i]
+        const blackMove = moveHistory[i + 1] || ""
+
+        const row = document.createElement("div")
+        row.className = "move-row"
+
+        const num = document.createElement("div")
+        num.className = "move-num"
+        num.textContent = moveNumber + "."
+
+        const white = document.createElement("div")
+        white.className = "move-cell"
+        white.textContent = whiteMove || ""
+
+        const black = document.createElement("div")
+        black.className = "move-cell"
+        black.textContent = blackMove || ""
+
+        const lastIdx = moveHistory.length - 1
+        if(i === lastIdx) {
+            white.classList.add("last-move")
+        }
+        if(i + 1 === lastIdx) {
+            black.classList.add("last-move")
+        }
+
+        row.appendChild(num)
+        row.appendChild(white)
+        row.appendChild(black)
+        list.appendChild(row)
+    }
 
     list.scrollTop = list.scrollHeight;
 }
@@ -377,10 +485,7 @@ async function handleSquareClick(event) {
 
         renderBoard();
 
-        const squares = document.querySelectorAll(".square")
-        const index = row * 8 + col
-
-        squares[index].classList.add("selected")
+        getSquareElement(row, col)?.classList.add("selected")
         highlightLegalMoves(selectedSquare)
         
         return;
@@ -418,6 +523,7 @@ async function handleSquareClick(event) {
             else {
                 capturedBlack.push(capturedPiece)
             }
+            gameStats.captures++
         }
 
         gameboard[to.row][to.col] = piece
@@ -425,6 +531,7 @@ async function handleSquareClick(event) {
 
         if(piece[1] === "p" && promotionChoice) {
             gameboard[to.row][to.col] = piece[0] + promotionChoice
+            gameStats.promotions++
         }
 
         if(isEnPassant) {
@@ -437,6 +544,7 @@ async function handleSquareClick(event) {
                 else {
                     capturedBlack.push(captured)
                 }
+                gameStats.captures++
             }
 
             gameboard[from.row][to.col] = null
@@ -460,6 +568,7 @@ async function handleSquareClick(event) {
 
                 markMoved(rook, {row: from.row, col: 0})
             }
+            gameStats.castles++
         }
 
         const capturedPieceFinal = isEnPassant ? enPassantCapturedPiece : capturedPiece
@@ -470,6 +579,7 @@ async function handleSquareClick(event) {
 
         if(isKingInCheck(soundTurnCheck)) {
             soundsToPlay = sounds.check;
+            gameStats.checks++
         }
         else if(isCastleMove) {
             soundsToPlay = sounds.castle    
@@ -531,6 +641,7 @@ async function handleSquareClick(event) {
     renderBoard();
     renderCapturedPieces();
     updateMaterialStatus();
+    updateGameInfo();
     highlightCheckedKing();
 }
 
@@ -543,6 +654,9 @@ function playSound(sound) {
 renderBoard();
 renderCapturedPieces();
 updateGameStatus();
+updateFileLabels();
+updateRankLabels();
+updateGameInfo();
 positionHistory.push(getPositionKey());
 
 updateBoardSize();
@@ -552,15 +666,22 @@ document.addEventListener("DOMContentLoaded", () => {
    const sidebar = document.getElementById("sidebar")
    const sidebarToggle = document.getElementById("sidebar-toggle")
    const overlay = document.getElementById("sidebar-overlay")
-   
+   const flipButton = document.getElementById("flip-board-btn")
+
    sidebarToggle.addEventListener("click", () => {
-        sidebar.classList.toggle("open")
-        overlay.classList.toggle("show")
+        sidebar.classList.add("open")
+        overlay.classList.add("show")
+        sidebarToggle.classList.add("hidden")
    })
 
    overlay.addEventListener("click", () => {
-        sidebar.classList.toggle("open")
-        overlay.classList.toggle("show")
+        sidebar.classList.remove("open")
+        overlay.classList.remove("show")
+        sidebarToggle.classList.remove("hidden")
+   })
+
+   flipButton.addEventListener("click", () => {
+        flipBoard();
    })
 })
 

@@ -45,11 +45,11 @@
                 <button class="tab-btn active" data-tab="history">
                     Move History
                 </button>
-                <button class="tab-btn" data-tab="material">
-                    Material
-                </button>
                 <button class="tab-btn" data-tab="info">
                     Game Info
+                </button>
+                <button class="tab-btn" data-tab="settings">
+                    Settings
                 </button>
             </div>
 
@@ -57,23 +57,87 @@
                 <ul id="move-history-list"></ul>
             </div>
 
-            <div class="tab-content" id="material-tab">
+            <div class="tab-content" id="info-tab">
+                <div class="section-title">Game</div>
+
+                <div class="info-card">
+                    <div class="info-row">
+                        <span>Move:</span>
+                        <span id="info-move">1</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span>Last Move:</span>
+                        <span id="info-last-move">None</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>50-Move Rule</h3>
+
+                    <div class="progress-bar">
+                        <div id="halfmove-progress"></div>
+                        <span id="halfmove-text">0%</span>
+                    </div>
+                </div>
+
+                <div class="section-title">Statistics</div>
+
+                <div class="stats-grid">
+                    <div class="info-card">
+                        <h3>Captures ⚔️</h3>
+                        <div id="stats-capture">0</div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Checks 🎯</h3>
+                        <div id="stats-check">0</div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Castles 🏰</h3>
+                        <div id="stats-castle">0</div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Promotions 👑</h3>
+                        <div id="stats-promotions">0</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Captured Pieces</div>
+
+                <div id="captured-container">
+                    <div class="captured-box black">
+                        <h3>Captured by White</h3>
+                        <div class="captured-row" id="captured-black-row"></div>
+                    </div>
+
+                    <div class="captured-box white">
+                        <h3>Captured by Black</h3>
+                        <div class="captured-row" id="captured-white-row"></div>
+                    </div>
+                </div>
+
+                <div class="section-title">Material</div>
+
                 <div id="material-status">
                     Equal Material
                 </div>
             </div>
 
-            <div class="tab-content" id="info-tab">
-                <div id="captured-container">
-                    <div class="captured-box black">
-                        <h3>White Captures</h3>
-                        <div class="captured-row" id="captured-black-row"></div>
-                    </div>
+            <div class="tab-content" id="settings-tab">
+                <div class="settings-group">
+                    <h3>Board</h3>
+                        <button id="flip-board-btn">Flip Board</button>
+                </div>
 
-                    <div class="captured-box white">
-                        <h3>Black Captures</h3>
-                        <div class="captured-row" id="captured-white-row"></div>
-                    </div>
+                <div class="settings-group">
+                    <h3>Audio</h3>
+                        <label>
+                            <input type="checkbox" id="sound-toggle" checked>
+                            Enable Sounds
+                        </label>
                 </div>
             </div>
         </div>
