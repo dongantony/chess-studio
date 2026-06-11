@@ -4,7 +4,6 @@ let gameOver = false
 let selectedSquare = null
 let lastMove = null
 let promotionInProgress = false
-let boardFlipped = false
 let halfMoveClock = 0
 let positionHistory = []
 let moveHistory = []
@@ -17,6 +16,13 @@ let gameStats = {
     promotions: 0
 }
 
+let boardFlipped = false
+let showCoordinates = true
+let showMoveHints = true
+let highlightChecks = true
+let highlightLastMove = true
+let lastMoveSquares = null
+let audioVolume = 0.5
 
 // =============================================
 // UI Rendering and Updates
@@ -63,7 +69,7 @@ function renderBoard() {
 }
 
 function updateBoardSize() {
-    const mobileLayout = window.innerHeight <= 1100
+    const mobileLayout = window.innerWidth <= 1100
 
     const sidebarWidth = mobileLayout ? 0 : 320
     const gap = mobileLayout ? 0 : 30
@@ -90,6 +96,8 @@ function getSquareElement(row, col) {
 }
 
 function highlightLegalMoves(from) {
+    if(!showMoveHints) return;
+
     const piece = gameboard[from.row][from.col]
 
     if(!piece) return;
@@ -118,6 +126,8 @@ function highlightLegalMoves(from) {
 }
 
 function highlightCheckedKing() {
+    if(!highlightChecks) return;
+
     if(!isKingInCheck(currentTurn)) return;
 
     const king = findKing(currentTurn)
@@ -127,11 +137,24 @@ function highlightCheckedKing() {
     getSquareElement(king.row, king.col)?.classList.add("incheck")
 }
 
+function highlightLastMoveSquares() {
+    if(!highlightLastMove) return;
+    if(!lastMoveSquares) return;
+
+    getSquareElement(lastMoveSquares.from.row, lastMoveSquares.from.col)?.classList.add("last-move-square")
+    getSquareElement(lastMoveSquares.to.row, lastMoveSquares.to.col)?.classList.add("last-move-square")
+}
+
+function refreshBoard() {
+    renderBoard();
+    highlightLastMoveSquares();
+    highlightCheckedKing();
+}
+
 function deselectPiece() {
     selectedSquare = null
     clearHighlights();
-    renderBoard();
-    highlightCheckedKing();
+    refreshBoard();
 }
 
 function showPromotionModal(color) {
@@ -287,10 +310,11 @@ function updateRankLabels() {
 function flipBoard() {
     boardFlipped = !boardFlipped
 
-    renderBoard();
+    document.getElementById("flip-board-toggle").checked = boardFlipped;
+
+    refreshBoard();
     updateFileLabels();
     updateRankLabels();
-    highlightCheckedKing();
 }
 
 
@@ -517,12 +541,20 @@ async function handleSquareClick(event) {
         const capturedPiece = gameboard[to.row][to.col]
 
         if(capturedPiece) {
+            if (capturedPiece?.[1] === "r") {
+                if(capturedPiece === "wr" && to.row === 7 && to.col === 0) hasMoved.wqr = true;
+                if(capturedPiece === "wr" && to.row === 7 && to.col === 7) hasMoved.wkr = true;
+                if(capturedPiece === "br" && to.row === 0 && to.col === 0) hasMoved.bqr = true;
+                if(capturedPiece === "br" && to.row === 0 && to.col === 7) hasMoved.bkr = true;
+            }
+
             if(capturedPiece[0] === "w") {
                 capturedWhite.push(capturedPiece)
             }
             else {
                 capturedBlack.push(capturedPiece)
             }
+
             gameStats.captures++
         }
 
@@ -592,6 +624,7 @@ async function handleSquareClick(event) {
         }
 
         lastMove = {piece, from: {...from}, to: {...to}}
+        lastMoveSquares = {from: {...from}, to:{...to}}
 
         if(piece[1] === "p" || capturedPiece || isEnPassant) {
             halfMoveClock = 0
@@ -638,15 +671,17 @@ async function handleSquareClick(event) {
     } 
     selectedSquare = null
     clearHighlights();
-    renderBoard();
+    refreshBoard();
     renderCapturedPieces();
     updateMaterialStatus();
     updateGameInfo();
-    highlightCheckedKing();
 }
 
 function playSound(sound) {
+    if(audioVolume == 0) return;
+
     sound.currentTime = 0
+    sound.volume = audioVolume;
     sound.play();
 }
 
@@ -663,26 +698,31 @@ updateBoardSize();
 window.addEventListener("resize", updateBoardSize)
 
 document.addEventListener("DOMContentLoaded", () => {
-   const sidebar = document.getElementById("sidebar")
-   const sidebarToggle = document.getElementById("sidebar-toggle")
-   const overlay = document.getElementById("sidebar-overlay")
-   const flipButton = document.getElementById("flip-board-btn")
+    const sidebar = document.getElementById("sidebar")
+    const sidebarToggle = document.getElementById("sidebar-toggle")
+    const overlay = document.getElementById("sidebar-overlay")
+    const flipButton = document.getElementById("flip-board-toggle")
+    const slider = document.getElementById("volume-slider")
+    const volumeText = document.getElementById("volume-value")
 
-   sidebarToggle.addEventListener("click", () => {
+    sidebarToggle.addEventListener("click", () => {
         sidebar.classList.add("open")
         overlay.classList.add("show")
         sidebarToggle.classList.add("hidden")
-   })
+    })
 
-   overlay.addEventListener("click", () => {
+    overlay.addEventListener("click", () => {
         sidebar.classList.remove("open")
         overlay.classList.remove("show")
         sidebarToggle.classList.remove("hidden")
-   })
+    })
 
-   flipButton.addEventListener("click", () => {
+    flipButton.addEventListener("change", () => {
         flipBoard();
-   })
+    })
+
+    slider.value = audioVolume
+    volumeText.textContent = Math.round(audioVolume * 100) + "%"
 })
 
 document.querySelectorAll(".tab-btn").forEach(button => {
@@ -700,4 +740,58 @@ document.querySelectorAll(".tab-btn").forEach(button => {
             .getElementById(`${button.dataset.tab}-tab`)
             .classList.add("active")
     })
+})
+
+document.getElementById("coordinates-toggle").addEventListener("change", e => {
+    showCoordinates = e.target.checked
+
+    document.getElementById("rank-label").style.display = showCoordinates ? "grid" : "none";
+    document.getElementById("file-label").style.display = showCoordinates ? "grid" : "none";
+})
+
+document.getElementById("move-hints-toggle").addEventListener("change", e => {
+    showMoveHints = e.target.checked
+
+    clearHighlights()
+
+    if(selectedSquare && showMoveHints) {
+        highlightLegalMoves(selectedSquare)
+    }
+})
+
+document.getElementById("check-highlight-toggle").addEventListener("change", e => {
+    highlightChecks = e.target.checked
+
+    refreshBoard();
+})
+
+document.getElementById("lastmove-highlight-toggle").addEventListener("change", e => {
+    highlightLastMove = e.target.checked
+
+    refreshBoard();
+})
+
+document.getElementById("dark-mode-toggle").addEventListener("change", e => {
+    document.body.classList.toggle("dark-mode", e.target.checked);
+})
+
+document.getElementById("board-theme-select").addEventListener("change", e => {
+    document.body.classList.remove(
+        "theme-classic",
+        "theme-blue",
+        "theme-brown",
+        "theme-gray"
+    )
+
+    document.body.classList.add(`theme-${e.target.value}`)
+})
+
+const volumeSlider = document.getElementById("volume-slider")
+const volumeText = document.getElementById("volume-value")
+
+document.getElementById("volume-slider").addEventListener("input", e => {
+    audioVolume = parseFloat(e.target.value)
+
+    const percent = Math.round(audioVolume * 100);
+    volumeText.textContent = percent + "%"
 })

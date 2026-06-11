@@ -109,12 +109,12 @@
 
                 <div id="captured-container">
                     <div class="captured-box black">
-                        <h3>Captured by White</h3>
+                        <h3>White's Captures</h3>
                         <div class="captured-row" id="captured-black-row"></div>
                     </div>
 
                     <div class="captured-box white">
-                        <h3>Captured by Black</h3>
+                        <h3>Black's Captures</h3>
                         <div class="captured-row" id="captured-white-row"></div>
                     </div>
                 </div>
@@ -127,17 +127,75 @@
             </div>
 
             <div class="tab-content" id="settings-tab">
-                <div class="settings-group">
+                <div class="settings-card">
                     <h3>Board</h3>
-                        <button id="flip-board-btn">Flip Board</button>
+                    
+                    <div class="setting-row">
+                        <span>Flip Board</span>
+                        <label class="switch board-orientation-switch">
+                            <input type="checkbox" id="flip-board-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <span>Show Coordinates</span>
+                        <label class="switch">
+                            <input type="checkbox" id="coordinates-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <span>Show Move Hints</span>
+                        <label class="switch">
+                            <input type="checkbox" id="move-hints-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <span>Highlight Check</span>
+                        <label class="switch">
+                            <input type="checkbox" id="check-highlight-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <span>Highlight Last Move</span>
+                        <label class="switch">
+                            <input type="checkbox" id="lastmove-highlight-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </div>
 
-                <div class="settings-group">
-                    <h3>Audio</h3>
-                        <label>
-                            <input type="checkbox" id="sound-toggle" checked>
-                            Enable Sounds
+                <div class="settings-card">
+                    <h3>Appearance</h3>
+
+                    <div class="setting-row">
+                        <span>Dark Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="slider"></span>
                         </label>
+                    </div>
+                    <div class="setting-row">
+                        <span>Board Theme</span>
+                        <select id="board-theme-select">
+                            <option value="classic">Classic Green</option>
+                            <option value="blue">Ocean Blue</option>
+                            <option value="brown">Wood</option>
+                            <option value="gray">Minimal Gray</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Audio</h3>
+                    
+                    <div class-="setting-row volume-row">
+                        <span>Volume</span>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                        <span id="volume-value"></span>
+                    </div>
                 </div>
             </div>
         </div>
