@@ -22,7 +22,7 @@ let showMoveHints = true
 let highlightChecks = true
 let highlightLastMove = true
 let lastMoveSquares = null
-let audioVolume = 0.5
+let audioVolume = 1
 
 // =============================================
 // UI Rendering and Updates
@@ -468,6 +468,120 @@ function renderMoveHistory() {
 
 
 // =============================================
+//  Configurations
+// =============================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    const sidebar = document.getElementById("sidebar")
+    const sidebarToggle = document.getElementById("sidebar-toggle")
+    const overlay = document.getElementById("sidebar-overlay")
+    const flipButton = document.getElementById("flip-board-toggle")
+    const slider = document.getElementById("volume-slider")
+    const volumeText = document.getElementById("volume-value")
+
+    function closeSidebar() {
+        sidebar.classList.remove("open")
+        overlay.classList.remove("show")
+        sidebarToggle.classList.remove("hidden")
+    }
+
+    sidebarToggle.addEventListener("click", () => {
+        sidebar.classList.add("open")
+        overlay.classList.add("show")
+        sidebarToggle.classList.add("hidden")
+    })
+
+    overlay.addEventListener("click", closeSidebar)
+
+    window.addEventListener("resize", () => {
+        if(window.innerWidth > 1100) {
+            closeSidebar();
+        }
+    })
+
+    flipButton.addEventListener("change", () => {
+        flipBoard();
+    })
+
+    slider.value = audioVolume
+    volumeText.textContent = Math.round(audioVolume * 100) + "%"
+})
+
+document.querySelectorAll(".tab-btn").forEach(button => {
+    button.addEventListener("click", () => {
+
+        document.querySelectorAll(".tab-btn")
+            .forEach(btn => btn.classList.remove("active"))
+
+        document.querySelectorAll(".tab-content")
+            .forEach(tab => tab.classList.remove("active"))
+
+        button.classList.add("active")
+
+        document
+            .getElementById(`${button.dataset.tab}-tab`)
+            .classList.add("active")
+    })
+})
+
+document.getElementById("coordinates-toggle").addEventListener("change", e => {
+    showCoordinates = e.target.checked
+
+    document.getElementById("rank-label").style.display = showCoordinates ? "grid" : "none";
+    document.getElementById("file-label").style.display = showCoordinates ? "grid" : "none";
+})
+
+document.getElementById("move-hints-toggle").addEventListener("change", e => {
+    showMoveHints = e.target.checked
+
+    clearHighlights()
+
+    if(selectedSquare && showMoveHints) {
+        highlightLegalMoves(selectedSquare)
+    }
+})
+
+document.getElementById("check-highlight-toggle").addEventListener("change", e => {
+    highlightChecks = e.target.checked
+
+    refreshBoard();
+})
+
+document.getElementById("lastmove-highlight-toggle").addEventListener("change", e => {
+    highlightLastMove = e.target.checked
+
+    refreshBoard();
+})
+
+document.getElementById("dark-mode-toggle").addEventListener("change", e => {
+    document.body.classList.toggle("dark-mode", e.target.checked);
+})
+
+document.getElementById("theme-select").addEventListener("change", e => {
+    document.body.classList.remove(
+        "theme-classic",
+        "theme-blue",
+        "theme-brown",
+        "theme-gray"
+    )
+
+    document.body.classList.add(`theme-${e.target.value}`)
+})
+
+const volumeSlider = document.getElementById("volume-slider")
+const volumeText = document.getElementById("volume-value")
+
+document.getElementById("volume-slider").addEventListener("input", e => {
+    audioVolume = parseFloat(e.target.value)
+
+    const percent = Math.round(audioVolume * 100);
+    volumeText.textContent = percent + "%"
+
+    e.target.style.setProperty("--volume", percent);
+})
+
+
+// =============================================
 //  Interacting with UI
 // =============================================
 
@@ -696,102 +810,3 @@ positionHistory.push(getPositionKey());
 
 updateBoardSize();
 window.addEventListener("resize", updateBoardSize)
-
-document.addEventListener("DOMContentLoaded", () => {
-    const sidebar = document.getElementById("sidebar")
-    const sidebarToggle = document.getElementById("sidebar-toggle")
-    const overlay = document.getElementById("sidebar-overlay")
-    const flipButton = document.getElementById("flip-board-toggle")
-    const slider = document.getElementById("volume-slider")
-    const volumeText = document.getElementById("volume-value")
-
-    sidebarToggle.addEventListener("click", () => {
-        sidebar.classList.add("open")
-        overlay.classList.add("show")
-        sidebarToggle.classList.add("hidden")
-    })
-
-    overlay.addEventListener("click", () => {
-        sidebar.classList.remove("open")
-        overlay.classList.remove("show")
-        sidebarToggle.classList.remove("hidden")
-    })
-
-    flipButton.addEventListener("change", () => {
-        flipBoard();
-    })
-
-    slider.value = audioVolume
-    volumeText.textContent = Math.round(audioVolume * 100) + "%"
-})
-
-document.querySelectorAll(".tab-btn").forEach(button => {
-    button.addEventListener("click", () => {
-
-        document.querySelectorAll(".tab-btn")
-            .forEach(btn => btn.classList.remove("active"))
-
-        document.querySelectorAll(".tab-content")
-            .forEach(tab => tab.classList.remove("active"))
-
-        button.classList.add("active")
-
-        document
-            .getElementById(`${button.dataset.tab}-tab`)
-            .classList.add("active")
-    })
-})
-
-document.getElementById("coordinates-toggle").addEventListener("change", e => {
-    showCoordinates = e.target.checked
-
-    document.getElementById("rank-label").style.display = showCoordinates ? "grid" : "none";
-    document.getElementById("file-label").style.display = showCoordinates ? "grid" : "none";
-})
-
-document.getElementById("move-hints-toggle").addEventListener("change", e => {
-    showMoveHints = e.target.checked
-
-    clearHighlights()
-
-    if(selectedSquare && showMoveHints) {
-        highlightLegalMoves(selectedSquare)
-    }
-})
-
-document.getElementById("check-highlight-toggle").addEventListener("change", e => {
-    highlightChecks = e.target.checked
-
-    refreshBoard();
-})
-
-document.getElementById("lastmove-highlight-toggle").addEventListener("change", e => {
-    highlightLastMove = e.target.checked
-
-    refreshBoard();
-})
-
-document.getElementById("dark-mode-toggle").addEventListener("change", e => {
-    document.body.classList.toggle("dark-mode", e.target.checked);
-})
-
-document.getElementById("board-theme-select").addEventListener("change", e => {
-    document.body.classList.remove(
-        "theme-classic",
-        "theme-blue",
-        "theme-brown",
-        "theme-gray"
-    )
-
-    document.body.classList.add(`theme-${e.target.value}`)
-})
-
-const volumeSlider = document.getElementById("volume-slider")
-const volumeText = document.getElementById("volume-value")
-
-document.getElementById("volume-slider").addEventListener("input", e => {
-    audioVolume = parseFloat(e.target.value)
-
-    const percent = Math.round(audioVolume * 100);
-    volumeText.textContent = percent + "%"
-})
