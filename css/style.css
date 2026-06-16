@@ -888,6 +888,118 @@ body.home-page::before {
     padding: 16px 20px;
 }
 
+.game-mode-content {
+    min-width: min(700px, 90vw);
+    padding: 30px;
+}
+
+.game-mode-content h2 {
+    margin-top: 0;
+    color: var(--accent);
+    font-size: 2rem;
+}
+
+.game-mode-subtitle {
+    color: var(--muted-text);
+    margin-bottom: 25px;
+}
+
+.game-mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px;
+}
+
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    padding: 20px;
+    border: none;
+    border-radius: 16px;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    transition: 0.25s ease;
+    box-shadow: var(--shadow);
+}
+
+.mode-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-4px);
+}
+
+.mode-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.mode-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.mode-desc {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    text-align: center;
+}
+
+.secondary-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #666;
+    color: white;
+    cursor: pointer;
+}
+
+.secondary-btn:hover {
+    background: #555;
+}
+
+.cancel-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #555;
+}
+
+.cancel-btn:hover {
+    background: #444;
+}
+
+@media (max-width: 600px) {
+    .game-mode-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .mode-btn {
+        min-height: 140px;
+    }
+}
+
+#difficulty-screen .game-mode-buttons {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.disabled-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disabled-btn:hover {
+    transform: none;
+    background: var(--accent);
+}
+
 .features {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

@@ -1,9 +1,14 @@
+// =================================================
+// Global Game State
+// =================================================
+
 const board = document.getElementById("chessboard");
 let currentTurn = "w"
 let gameOver = false
-let selectedSquare = null
-let lastMove = null
 let promotionInProgress = false
+let selectedSquare = null 
+let lastMove = null
+let lastMoveSquares = null
 let halfMoveClock = 0
 let positionHistory = []
 let moveHistory = []
@@ -21,8 +26,11 @@ let showCoordinates = true
 let showMoveHints = true
 let highlightChecks = true
 let highlightLastMove = true
-let lastMoveSquares = null
 let audioVolume = 1
+
+let gameMode = localStorage.getItem("gameMode") || "human"
+let computerColor = "b"
+
 
 // =============================================
 // UI Rendering and Updates
@@ -40,7 +48,7 @@ function renderBoard() {
 
             square.classList.add("square")
 
-            if((row + col) % 2 == 0) {
+            if((row + col) % 2 === 0) {
                 square.classList.add("light")
             } 
             else {
@@ -157,6 +165,27 @@ function deselectPiece() {
     refreshBoard();
 }
 
+function handlePieceSelection(square, piece, element) {
+    if(!piece) return;
+    if(piece[0] !== currentTurn) return;
+
+    clearHighlights();
+
+    selectedSquare = square
+    element.classList.add("selected")
+
+    highlightLegalMoves(square);
+}
+
+function switchSelectedPiece(square) {
+    selectedSquare = square
+
+    renderBoard();
+
+    getSquareElement(square.row, square.col)?.classList.add("selected");
+    highlightLegalMoves(square);
+}
+
 function showPromotionModal(color) {
     promotionInProgress = true
 
@@ -184,6 +213,70 @@ function showPromotionModal(color) {
 
         modal.classList.remove("hidden")
     })
+}
+
+function updateFileLabels() {
+    const files = boardFlipped 
+            ? ["h", "g", "f", "e", "d", "c", "b", "a"]
+            : ["a", "b", "c", "d", "e", "f", "g", "h"]
+    
+    const container = document.getElementById("file-label")
+    
+    container.innerHTML = ""
+
+    files.forEach(file => {
+        const div = document.createElement("div")
+        div.textContent = file
+        container.appendChild(div)
+    })
+}
+
+function updateRankLabels() {
+    const ranks = boardFlipped 
+            ? ["1", "2", "3", "4", "5", "6", "7", "8"]
+            : ["8", "7", "6", "5", "4", "3", "2", "1"]
+    
+    const container = document.getElementById("rank-label")
+    
+    container.innerHTML = ""
+
+    ranks.forEach(rank => {
+        const div = document.createElement("div")
+        div.textContent = rank
+        container.appendChild(div)
+    })
+}
+
+function flipBoard() {
+    boardFlipped = !boardFlipped
+
+    document.getElementById("flip-board-toggle").checked = boardFlipped;
+
+    refreshBoard();
+    updateFileLabels();
+    updateRankLabels();
+}
+
+
+// =================================================
+// Display / Information Helpers
+// =================================================
+
+function pieceValue(piece) {
+    switch(piece[1]) {
+        case "p": 
+            return 1;
+        case "n": 
+            return 3;
+        case "b": 
+            return 3;
+        case "r": 
+            return 5;
+        case "q": 
+            return 9;
+        default: 
+            return 0;
+    }
 }
 
 function renderCapturedPieces() {
@@ -272,70 +365,6 @@ function updateGameInfo() {
     }
     else {
         bar.style.background = "linear-gradient(90deg,#d9534f,#ff6b6b)"
-    }
-}
-
-function updateFileLabels() {
-    const files = boardFlipped 
-            ? ["h", "g", "f", "e", "d", "c", "b", "a"]
-            : ["a", "b", "c", "d", "e", "f", "g", "h"]
-    
-    const container = document.getElementById("file-label")
-    
-    container.innerHTML = ""
-
-    files.forEach(file => {
-        const div = document.createElement("div")
-        div.textContent = file
-        container.appendChild(div)
-    })
-}
-
-function updateRankLabels() {
-    const ranks = boardFlipped 
-            ? ["1", "2", "3", "4", "5", "6", "7", "8"]
-            : ["8", "7", "6", "5", "4", "3", "2", "1"]
-    
-    const container = document.getElementById("rank-label")
-    
-    container.innerHTML = ""
-
-    ranks.forEach(rank => {
-        const div = document.createElement("div")
-        div.textContent = rank
-        container.appendChild(div)
-    })
-}
-
-function flipBoard() {
-    boardFlipped = !boardFlipped
-
-    document.getElementById("flip-board-toggle").checked = boardFlipped;
-
-    refreshBoard();
-    updateFileLabels();
-    updateRankLabels();
-}
-
-
-// =============================================
-// Game Information Helper Function
-// =============================================
-
-function pieceValue(piece) {
-    switch(piece[1]) {
-        case "p": 
-            return 1;
-        case "n": 
-            return 3;
-        case "b": 
-            return 3;
-        case "r": 
-            return 5;
-        case "q": 
-            return 9;
-        default: 
-            return 0;
     }
 }
 
@@ -466,10 +495,14 @@ function renderMoveHistory() {
     list.scrollTop = list.scrollHeight;
 }
 
+function isComputerGame() {
+    return gameMode === "computer"
+}
 
-// =============================================
-//  Configurations
-// =============================================
+
+// =================================================
+//  Configurations / Event Listeners
+// =================================================
 
 document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.getElementById("sidebar")
@@ -581,214 +614,271 @@ document.getElementById("volume-slider").addEventListener("input", e => {
 })
 
 
-// =============================================
-//  Interacting with UI
-// =============================================
+// =================================================
+//  Rules, Move Handling, and Game State Management
+// =================================================
 
 async function handleSquareClick(event) {
-    const row = Number(event.currentTarget.dataset.row)
-    const col = Number(event.currentTarget.dataset.col)
+    if(gameOver || promotionInProgress) return;
 
-    const clickedPiece = gameboard[row][col] 
-
-    if(gameOver) return;
-    if(promotionInProgress) return;
+    const square = getClickedSquare(event);
+    const clickedPiece = gameboard[square.row][square.col]
 
     if(!selectedSquare) {
-
-        if(!clickedPiece) return;
-        if(clickedPiece[0] !== currentTurn) return;
-
-        clearHighlights();
-        selectedSquare = {row, col}
-        event.currentTarget.classList.add("selected")
-        highlightLegalMoves(selectedSquare);
-
+        handlePieceSelection(square, clickedPiece, event.currentTarget);
         return;
     }
 
-    const from = selectedSquare
-
-    if(from.row === row && from.col === col) {
+    if(isSameSquare(selectedSquare, square)) {
         deselectPiece();
         return;
     }
 
-    clearHighlights();
-    const to = {row, col}
-    const piece = gameboard[from.row][from.col]
-
     if(clickedPiece && clickedPiece[0] === currentTurn) {
-        selectedSquare = { row, col }
-
-        renderBoard();
-
-        getSquareElement(row, col)?.classList.add("selected")
-        highlightLegalMoves(selectedSquare)
-        
-        return;
+        switchSelectedPiece(square);
+         return;
     }
 
-    if(isLegalMove(piece, from, to)) {
-        const isCastleMove = piece[1] === "k" && Math.abs(to.col - from.col) === 2
-        const isEnPassant = piece[1] === "p" && Math.abs(to.col - from.col) === 1 && !gameboard[to.row][to.col] &&
-                            lastMove && Math.abs(lastMove.from.row - lastMove.to.row) === 2 && 
-                            lastMove.to.row === from.row && lastMove.to.col === to.col
+    await attemptMove(selectedSquare, square)
 
-        let enPassantCapturedPiece = null
-
-        if(isEnPassant) {
-            enPassantCapturedPiece = gameboard[from.row][to.col]
-        }
-
-        let promotionChoice = null
-
-        if(piece[1] === "p") {
-            promotionChoice = await promotePawn(piece, to)
-
-            if(promotionChoice == null && (to.row === 0 || to.row === 7)) {
-                deselectPiece();
-                return;
-            }
-        }
-
-        const capturedPiece = gameboard[to.row][to.col]
-
-        if(capturedPiece) {
-            if (capturedPiece?.[1] === "r") {
-                if(capturedPiece === "wr" && to.row === 7 && to.col === 0) hasMoved.wqr = true;
-                if(capturedPiece === "wr" && to.row === 7 && to.col === 7) hasMoved.wkr = true;
-                if(capturedPiece === "br" && to.row === 0 && to.col === 0) hasMoved.bqr = true;
-                if(capturedPiece === "br" && to.row === 0 && to.col === 7) hasMoved.bkr = true;
-            }
-
-            if(capturedPiece[0] === "w") {
-                capturedWhite.push(capturedPiece)
-            }
-            else {
-                capturedBlack.push(capturedPiece)
-            }
-
-            gameStats.captures++
-        }
-
-        gameboard[to.row][to.col] = piece
-        gameboard[from.row][from.col] = null
-
-        if(piece[1] === "p" && promotionChoice) {
-            gameboard[to.row][to.col] = piece[0] + promotionChoice
-            gameStats.promotions++
-        }
-
-        if(isEnPassant) {
-            const captured = gameboard[from.row][to.col]
-
-            if(captured) {
-                if(captured[0] === "w") {
-                    capturedWhite.push(captured)
-                } 
-                else {
-                    capturedBlack.push(captured)
-                }
-                gameStats.captures++
-            }
-
-            gameboard[from.row][to.col] = null
-        }
-
-        markMoved(piece, from)
-        
-        if(isCastleMove) {
-            if(to.col === 6) {
-                const rook = gameboard[from.row][7]
-                gameboard[from.row][5] = gameboard[from.row][7]
-                gameboard[from.row][7] = null
-
-                markMoved(rook, {row: from.row, col: 7})
-            }
-            
-            if(to.col === 2) {
-                const rook = gameboard[from.row][0]
-                gameboard[from.row][3] = gameboard[from.row][0]
-                gameboard[from.row][0] = null
-
-                markMoved(rook, {row: from.row, col: 0})
-            }
-            gameStats.castles++
-        }
-
-        const capturedPieceFinal = isEnPassant ? enPassantCapturedPiece : capturedPiece
-        addMoveToHistory(piece, from, to, capturedPieceFinal, promotionChoice, isCastleMove, isEnPassant)
-
-        let soundsToPlay = sounds.move
-        const soundTurnCheck = piece[0] === "w" ? "b" : "w"
-
-        if(isKingInCheck(soundTurnCheck)) {
-            soundsToPlay = sounds.check;
-            gameStats.checks++
-        }
-        else if(isCastleMove) {
-            soundsToPlay = sounds.castle    
-        }
-        else if(promotionChoice) {
-            soundsToPlay = sounds.promote
-        }
-        else if(capturedPiece || isEnPassant) {
-            soundsToPlay = sounds.capture
-        }
-
-        lastMove = {piece, from: {...from}, to: {...to}}
-        lastMoveSquares = {from: {...from}, to:{...to}}
-
-        if(piece[1] === "p" || capturedPiece || isEnPassant) {
-            halfMoveClock = 0
-        } 
-        else {
-            halfMoveClock++
-        }
-
-        currentTurn = (currentTurn === "w" ? "b" : "w") 
-        updateGameStatus();
-        positionHistory.push(getPositionKey())
-
-        if(isCheckmate(currentTurn)) {
-            gameOver = true
-            soundsToPlay = sounds.gameover
-            const winner = currentTurn === "w" ? "Black" : "White"
-            updateGameStatus(`Checkmate! ${winner} wins!`);
-        }
-        else if(isStalemate(currentTurn)) {
-            gameOver = true
-            soundsToPlay = sounds.gameover
-            updateGameStatus("Stalemate! It's a draw!");
-        }
-        else if(isInsufficientMaterial()) {
-            gameOver = true
-            soundsToPlay = sounds.gameover
-            updateGameStatus("Draw due to insufficient material!");
-        }
-        else if(halfMoveClock >= 100) {
-            gameOver = true
-            soundsToPlay = sounds.gameover
-            updateGameStatus("Draw by fifty-move rule");
-        }
-        else if(isThreefoldRepetition()) {
-            gameOver = true
-            soundsToPlay = sounds.gameover
-            updateGameStatus("Draw by threefold repetition!")
-        }
-        else if(isKingInCheck(currentTurn)) {
-            updateGameStatus("Check!");
-        }
-
-        playSound(soundsToPlay);
-    } 
     selectedSquare = null
+    
     clearHighlights();
     refreshBoard();
     renderCapturedPieces();
     updateMaterialStatus();
     updateGameInfo();
+}
+
+function getClickedSquare(event) {
+    const square = {row: Number(event.currentTarget.dataset.row), col: Number(event.currentTarget.dataset.col)}
+    return square;
+}
+
+function isSameSquare(a, b) {
+    return a.row === b.row && a.col === b.col;
+}
+
+async function attemptMove(from, to) {
+    const piece = gameboard[from.row][from.col]
+
+    if(!isLegalMove(piece, from, to)) {
+        return;
+    }
+
+    const moveData = await prepareMove(piece, from, to);
+
+    if(!moveData) return;
+
+    executeMove(moveData);
+    updateMoveTracking(moveData);
+    finishTurn(moveData);
+}
+
+async function prepareMove(piece, from, to) {
+    const isCastleMove = piece[1] === "k" && Math.abs(to.col - from.col) === 2
+    const isEnPassant = piece[1] === "p" && Math.abs(to.col - from.col) === 1 && !gameboard[to.row][to.col] &&
+                        lastMove && Math.abs(lastMove.from.row - lastMove.to.row) === 2 && 
+                        lastMove.to.row === from.row && lastMove.to.col === to.col
+
+    let promotionChoice = null
+    let enPassantCapturedPiece = isEnPassant ? gameboard[from.row][from.col] : null
+    
+    if(piece[1] === "p" && (to.row === 0 || to.row === 7)) {
+        promotionChoice = await promotePawn(piece, to)
+
+        if(promotionChoice == null && (to.row === 0 || to.row === 7)) {
+            deselectPiece();
+            return;
+        }
+    }
+
+    const move = {piece, from, to, isCastleMove, isEnPassant, promotionChoice, capturedPiece: gameboard[to.row][to.col], enPassantCapturedPiece}
+    return move;
+}
+
+function executeMove(move) {
+    handleCapture(move);
+    movePiece(move);
+    handlePromotion(move);
+    handleEnPassant(move);
+    handleCastling(move);
+    markMoved(move.piece, move.from);
+}
+
+function handleCapture(move) {
+    const captured = move.capturedPiece
+
+    if(!captured) return;
+
+    updateCastlingRightsOnCapture(captured, move.to);
+
+    if(captured[0] === "w") {
+        capturedWhite.push(captured)
+    } 
+    else {
+        capturedBlack.push(captured)
+    }
+    gameStats.captures++
+}
+
+function movePiece(move) {
+    gameboard[move.to.row][move.to.col] = move.piece
+    gameboard[move.from.row][move.from.col] = null
+}
+
+function handlePromotion(move) {
+    if(move.piece[1] === "p" && move.promotionChoice) {
+        gameboard[move.to.row][move.to.col] = move.piece[0] + move.promotionChoice
+        gameStats.promotions++
+    }
+}
+
+function handleEnPassant(move) {
+    if(!move.isEnPassant) return;
+
+    const captured = gameboard[move.from.row][move.to.col]
+
+    if(captured) {
+        if(captured[0] === "w") {
+            capturedWhite.push(captured)
+        } 
+        else {
+            capturedBlack.push(captured)
+        }
+        gameStats.captures++
+    }
+
+    gameboard[move.from.row][move.to.col] = null
+}
+
+function handleCastling(move) {
+    if(!move.isCastleMove) return;
+
+    if(move.to.col === 6) {
+        const rook = gameboard[move.from.row][7]
+        gameboard[move.from.row][5] = gameboard[move.from.row][7]
+        gameboard[move.from.row][7] = null
+
+        markMoved(rook, {row: move.from.row, col: 7})
+    }
+    
+    if(move.to.col === 2) {
+        const rook = gameboard[move.from.row][0]
+        gameboard[move.from.row][3] = gameboard[move.from.row][0]
+        gameboard[move.from.row][0] = null
+
+        markMoved(rook, {row: move.from.row, col: 0})
+    }
+    gameStats.castles++
+}
+
+function updateCastlingRightsOnCapture(capturedPiece, square) {
+    if(capturedPiece?.[1] !== "r") return;
+    
+    const {row, col} = square
+
+    if(capturedPiece === "wr" && row === 7 && col === 0) hasMoved.wqr = true;
+    if(capturedPiece === "wr" && row === 7 && col === 7) hasMoved.wkr = true;
+    if(capturedPiece === "br" && row === 0 && col === 0) hasMoved.bqr = true;
+    if(capturedPiece === "br" && row === 0 && col === 7) hasMoved.bkr = true;
+}
+
+function finishTurn(move) {
+    playMoveSound(move);
+
+    currentTurn = currentTurn === "w" ? "b" : "w"
+
+    updateGameStatus();
+    positionHistory.push(getPositionKey());
+    checkGameEndingConditions();
+
+    if(isComputerGame() && !gameOver && currentTurn === "b") {
+        setTimeout(makeComputerMove, 1000)
+    }
+} 
+
+function updateMoveTracking(move) {
+    const capturedPieceFinal  = move.isEnPassant ? move.enPassantCapturedPiece : move.capturedPiece
+
+    addMoveToHistory(move.piece, move.from, move.to, capturedPieceFinal, move.promotionChoice, move.isCastleMove, move.isEnPassant);
+
+    lastMove = {piece: move.piece, from: {...move.from}, to: {...move.to}}
+    lastMoveSquares = {from: {...move.from}, to: {...move.to}}
+
+    updateHalfMoveClock(move);
+}
+
+function updateHalfMoveClock(move) {
+    if(move.piece[1] === "p" || move.capturedPiece || move.isEnPassant) {
+        halfMoveClock = 0
+    } 
+    else {
+        halfMoveClock++
+    }
+}
+
+function checkGameEndingConditions() {
+    if(isCheckmate(currentTurn)) {
+        gameOver = true
+        playSound(sounds.gameover);
+        const winner = currentTurn === "w" ? "Black" : "White"
+        updateGameStatus(`Checkmate! ${winner} wins!`);
+        return;
+    }
+    else if(isStalemate(currentTurn)) {
+        gameOver = true
+        playSound(sounds.gameover);
+        updateGameStatus("Stalemate! It's a draw!");
+        return;
+    }
+    else if(isInsufficientMaterial()) {
+        gameOver = true
+        playSound(sounds.gameover);
+        updateGameStatus("Draw due to insufficient material!");
+        return;
+    }
+    else if(halfMoveClock >= 100) {
+        gameOver = true
+        playSound(sounds.gameover);
+        updateGameStatus("Draw by fifty-move rule");
+        return;
+    }
+    else if(isThreefoldRepetition()) {
+        gameOver = true
+        playSound(sounds.gameover);
+        updateGameStatus("Draw by threefold repetition!");
+        return;
+    }
+    else if(isKingInCheck(currentTurn)) {
+        updateGameStatus("Check!");
+    }
+}
+
+// =================================================
+//  Audio System
+// =================================================
+
+function playMoveSound(move) {
+    let soundsToPlay = sounds.move
+
+    const soundTurnCheck = move.piece[0] === "w" ? "b" : "w"
+
+    if(isKingInCheck(soundTurnCheck)) {
+        soundsToPlay = sounds.check;
+        gameStats.checks++
+    }
+    else if(move.isCastleMove) {
+        soundsToPlay = sounds.castle    
+    }
+    else if(move.promotionChoice) {
+        soundsToPlay = sounds.promote
+    }
+    else if(move.capturedPiece || move.isEnPassant) {
+        soundsToPlay = sounds.capture
+    }
+
+    playSound(soundsToPlay);
 }
 
 function playSound(sound) {
@@ -797,6 +887,58 @@ function playSound(sound) {
     sound.currentTime = 0
     sound.volume = audioVolume;
     sound.play();
+}
+
+// =================================================
+//  Computer Mode
+// =================================================
+
+function getAllLegalMoves(color) {
+    const moves = []
+
+    for(let row = 0; row < 8; row++) {
+        for(let col = 0; col < 8; col++) {
+            const piece = gameboard[row][col]
+
+            if(!piece || piece[0] !== color) continue;
+
+            const from = {row, col}
+
+            for(let r = 0; r < 8; r++) {
+                for(let c = 0; c < 8; c++) {
+                    const to = {row: r, col: c}
+
+                    if(isLegalMove(piece, from, to)) {
+                        moves.push({piece, from, to})
+                    }
+                }
+            }
+        }
+    }
+
+    return moves;
+}
+
+async function makeComputerMove() {
+    if(gameOver) return;
+
+    const legalMoves = getAllLegalMoves(computerColor);
+
+    if(!legalMoves.length) return;
+
+    const randomMove = legalMoves[Math.floor(Math.random() * legalMoves.length)]
+
+    const moveData = await prepareMove(randomMove.piece, randomMove.from, randomMove.to);
+
+    if(!moveData) return;
+
+    executeMove(moveData);
+    updateMoveTracking(moveData);
+    refreshBoard();
+    renderCapturedPieces();
+    updateMaterialStatus();
+    updateGameInfo();
+    finishTurn(moveData);
 }
 
 

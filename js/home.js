@@ -1,3 +1,4 @@
+// Animated Quote Typing
 const quotes = [
     "Every chess master was once a beginner.",
     "Move in silence, only speak when it's time to say checkmate.",
@@ -48,3 +49,52 @@ function typeQuote() {
 }
 
 typeQuote();
+
+// UI Modals
+const playButton = document.getElementById("play-game-btn")
+const modal = document.getElementById("game-mode-modal")
+
+const twoPlayerBtn = document.getElementById("two-player-btn")
+const computerBtn = document.getElementById("computer-btn")
+const closeBtn = document.getElementById("close-game-mode")
+
+playButton.addEventListener("click", () => {
+    modal.classList.remove("hidden")
+})
+
+closeBtn.addEventListener("click", () => {
+    modal.classList.add("hidden")
+})
+
+twoPlayerBtn.addEventListener("click", () => {
+    localStorage.setItem("gameMode", "human")
+    window.location.href = "chess.html"
+})
+
+const gameModeScreen = document.getElementById("game-mode-screen")
+const difficultyScreen = document.getElementById("difficulty-screen")
+const backBtn = document.getElementById("back-btn")
+const easyBtn = document.getElementById("easy-btn")
+
+playButton.addEventListener("click", () => {
+    modal.classList.remove("hidden")
+    gameModeScreen.classList.remove("hidden")
+    difficultyScreen.classList.add("hidden")
+})
+
+computerBtn.addEventListener("click", () => {
+    gameModeScreen.classList.add("hidden")
+    difficultyScreen.classList.remove("hidden")
+})
+
+backBtn.addEventListener("click", () => {
+    gameModeScreen.classList.remove("hidden")
+    difficultyScreen.classList.add("hidden")
+})
+
+easyBtn.addEventListener("click", () => {
+    localStorage.setItem("gameMode", "computer")
+    localStorage.setItem("difficulty", "easy")
+
+    window.location.href = "chess.html"
+})

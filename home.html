@@ -13,7 +13,7 @@
         <p class="home-subtitle">Play chess with full rules, move history, statistics, themes, and more.</p>
         
         <div class="menu-buttons">
-            <a href="chess.html" class="play-btn">▶ Play Game</a>
+            <button id="play-game-btn" class="play-btn">▶ Play Game</button>
             <button id="how-to-play-btn">📖 How to Play</button>
             <button id="settings-btn">⚙ Settings</button>
         </div>
@@ -47,6 +47,58 @@
         </div>
     </div>
 
+    <div id="game-mode-modal" class="modal hidden">
+        <div class="modal-content game-mode-content">
+            <div id="game-mode-screen">
+                <h2>Choose Your Battle</h2>
+
+                <p class="game-mode-subtitle">Select how you want to play.</p>
+
+                <div class="game-mode-buttons">
+                    <button id="two-player-btn" class="mode-btn">
+                        <span class="mode-icon">👥</span>
+                        <span class="mode-title">Two Players</span>
+                        <span class="mode-desc">Play locally with a friend.</span>
+                    </button>
+                    
+                    <button id="computer-btn" class="mode-btn">
+                        <span class="mode-icon">🤖</span>
+                        <span class="mode-title">Computer</span>
+                        <span class="mode-desc">Challenge the AI.</span>
+                    </button>
+                </div>
+
+                <button id="close-game-mode" class="secondary-btn cancel-btn">
+                    Cancel
+                </button>
+            </div>
+
+            <div id="difficulty-screen" class="hidden">
+                <h2>Select Difficulty</h2>
+
+                <div class="game-mode-buttons">
+                    <button id="easy-btn" class="mode-btn">
+                        <span class="mode-icon">😊</span>
+                        <span class="mode-title">Easy</span>
+                    </button>
+                    
+                    <button class="mode-btn disabled-btn" disabled>
+                        <span class="mode-icon">😐</span>
+                        <span class="mode-title">Medium</span>
+                    </button>
+
+                    <button class="mode-btn disabled-btn" disabled>
+                        <span class="mode-icon">😈</span>
+                        <span class="mode-title">Hard</span>
+                    </button>
+                </div>
+
+                <button id="back-btn" class="secondary-btn">
+                    ← Back
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/home.js"></script>
 </body>
