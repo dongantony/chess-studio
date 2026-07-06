@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Guide</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link id="favicon" rel="icon" type="image/png" href="img/favico.ico">
+</head>
+<body class="home-page">
+    <div class="home-hero guide-container">
+        <h1 class="home-title">Chess Guide</h1>
+
+        <p class="home-subtitle">Learn the rules of chess and master the board.</p>
+
+        <button class="play-btn" onclick="window.location.href='home.html'">
+            ← Back to Menu
+        </button>
+
+        <div class="accordion">
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    ♚ Overview of Chess
+                </button>
+
+                <div class="accordion-content">
+                    <div class="guide-block">
+                        <h4>What is Chess?</h4>
+                        <p>
+                            Chess is a two-player strategy game played on an 8x8 board.
+                            Each player commands an army of 16 pieces, each with unique movement patterns.
+                            You must use your pieces to control the board and outmaneuver your opponent.
+                        </p>
+                    </div>
+                    <div class="guide-block">
+                        <h4>Objective of Chess</h4>
+                        <p>
+                            The objective of chess is to checkmate your opponent's king.
+                            Checkmate occurs when the king is under attack and there are 
+                            no legal moves available to escape, block the attack, or capture
+                            the threatening piece.
+                        </p>
+                    </div>
+                    <div class="guide-block">
+                        <h4>How a Game Ends</h4>
+                        <p>
+                            A game of chess can end in checkmate, stalemate, resignation,
+                            or a draw due to insufficient material or repetition of moves. 
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    ♟ How Pieces Move
+                </button>
+
+                <div class="accordion-content">
+                    <div class="piece-selector">
+                        <button class="piece-tab active" data-piece="pawn">♙</button>
+                        <button class="piece-tab" data-piece="rook">♖</button>
+                        <button class="piece-tab" data-piece="knight">♘</button>
+                        <button class="piece-tab" data-piece="bishop">♗</button>
+                        <button class="piece-tab" data-piece="queen">♕</button>
+                        <button class="piece-tab" data-piece="king">♔</button>
+                    </div>
+
+                    <div class="piece-viewer">
+                        <div class="tutorial-card">
+                            <div class="tutorial-board">
+                                <div class="tutorial-header">
+                                    <span>Movement Example</span>
+                                </div>
+
+                                <div id="movement-board" class="mini-board"></div>
+                            </div>
+                        
+                            <div class="tutorial-info">
+                                <div class="piece-header">
+                                    <img id="piece-image" src="img/black-pawn.png" alt="Pawn">
+
+                                    <div class="piece-header-text">
+                                        <h3 id="piece-name">Pawn</h3>
+                                        <div id="piece-value">Value: 1</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="piece-description">
+                                    <h4>How It Moves</h4>
+                                    <ul id="piece-details">
+                                        <li>Moves forward one square.</li>
+                                        <li>Can move two squares on its first move.</li>
+                                        <li>Captures diagonally.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    👑 Special Rules
+                </button>
+
+                <div class="accordion-content">
+                    <div class="special-rule-card">
+                        <div class="special-info">
+                            <h4>Castling</h4>
+                            <p>
+                                Castling allows the king to move two squares toward a rook,
+                                while the rook jumps to the square next to the king.
+                            </p>
+                        </div>
+
+                        <div class="special-example">
+                            <div class="special-state">
+                                <span>Before</span>
+                                <div id="castle-before" class="special-board"></div>
+                            </div>
+                            <div class="special-arrow">
+                                ➜
+                            </div>
+                            <div class="special-state">
+                                <span>After</span>
+                                <div id="castle-after" class="special-board"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="special-rule-card">
+                        <div class="special-info">
+                            <h4>En Passant</h4>
+                            <p>
+                                A pawn may capture an opposing pawn that has just advanced
+                                two squares as if it had only moved one square.
+                            </p>
+                        </div>
+                        
+                        <div class="special-example">
+                            <div class="special-state">
+                                <span>Before</span>
+                                <div id="en-passant-before" class="special-board"></div>
+                            </div>
+                            <div class="special-arrow">
+                                ➜
+                            </div>
+                            <div class="special-state">
+                                <span>After</span>
+                                <div id="en-passant-after" class="special-board"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="special-rule-card">
+                        <div class="special-info">
+                            <h4>Promotion</h4>
+                            <p>
+                                When a pawn reaches the final rank, it can become a queen,
+                                rook, bishop, or knight.
+                            </p>
+                        </div>
+                        
+                        <div class="special-example">
+                            <div class="special-state">
+                                <span>Before</span>
+                                <div id="promotion-before" class="special-board"></div>
+                            </div>
+                            <div class="special-arrow">
+                                ➜
+                            </div>
+                            <div class="special-state">
+                                <span>After</span>
+                                <div id="promotion-after" class="special-board"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    🧠 Strategies and Tactics
+                </button>
+
+                <div class="accordion-content">
+                    <div class="guide-demo">
+                        <div class="demo-selector">
+                            <button id="prev-demo" class="nav-btn">
+                                ◀
+                            </button>
+
+                            <select id="demo-select">
+                                <option value="center">Center Control</option>
+                                <option value="development">Development</option>
+                                <option value="safety">King Safety</option>
+                                <option value="fork">Fork</option>
+                                <option value="pin">Pin</option>
+                                <option value="hanging">Hanging Piece</option>
+                                <option value="discovered">Discovered Attack</option>
+                            </select>
+
+                            <button id="next-demo" class="nav-btn">
+                                ▶
+                            </button>
+                        </div>
+                        <div class="tutorial-card">
+                            <div class="tutorial-board">
+                                <div class="tutorial-header">Demonstration</div>
+                                <div id="strategy-board" class="mini-board"></div>
+                            </div>
+                            <div class="tutorial-info">
+                                <div class="lesson-tag"></div>
+                                <h2 id="demo-title"></h2>
+
+                                <div class="lesson-summary">
+                                    <p id="demo-text"></p>
+                                </div>
+
+                                <div class="lesson-steps">
+                                    <h4>Key Ideas</h4>
+
+                                    <ul id="demo-explanation"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    🎯 Openings
+                </button>
+
+                <div class="accordion-content">
+                    
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    🏁 Endgames
+                </button>
+
+                <div class="accordion-content">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/guide.js"></script>
+</body>
+</html>

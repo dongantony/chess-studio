@@ -52,6 +52,7 @@ typeQuote();
 
 // UI Modals
 const playButton = document.getElementById("play-game-btn")
+const htpButton = document.getElementById("how-to-play-btn")
 const modal = document.getElementById("game-mode-modal")
 
 const twoPlayerBtn = document.getElementById("two-player-btn")
@@ -60,6 +61,10 @@ const closeBtn = document.getElementById("close-game-mode")
 
 playButton.addEventListener("click", () => {
     modal.classList.remove("hidden")
+})
+
+htpButton.addEventListener("click", () => {
+    window.location.href = "guide.html"
 })
 
 closeBtn.addEventListener("click", () => {
