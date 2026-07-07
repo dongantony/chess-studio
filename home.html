@@ -3,6 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const saved = JSON.parse(localStorage.getItem("chessSettings") || "{}")
+
+        if (saved.theme) {
+            document.documentElement.classList.add(`theme-${saved.theme}`)
+        }
+        
+        if (saved.darkMode) {
+            document.documentElement.classList.add("dark-mode")
+        }
+    </script>
     <title>♛ Chess Game ♚</title>
     <link rel="stylesheet" href="css/style.css">
     <link id="favicon" rel="icon" type="image/png" href="img/favico.ico">
@@ -100,6 +111,55 @@
         </div>
     </div>
 
+    <div id="global-settings-modal" class="modal hidden">
+        <div class="modal-content">
+            
+            <div class="settings-header">
+                <h2>⚙ Settings</h2>
+                <button id="close-settings">Close</button>
+            </div>
+
+            <div class="settings-section">
+                <h3>Appearance</h3>
+
+                <div class="global-setting-row">
+                    <span>Dark Mode</span>
+
+                    <label class="switch">
+                        <input type="checkbox" id="global-dark-mode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="global-setting-row">
+                    <span>Theme</span>
+
+                    <select id="global-theme">
+                        <option value="classic">Classic Green</option>
+                        <option value="blue">Ocean Blue</option>
+                        <option value="brown">Wood</option>
+                        <option value="gray">Minimal Gray</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="settings-section">
+                <h3>Audio</h3>
+
+                <div class="global-setting-row volume-row">
+                    <span>Volume</span>
+
+                    <div class="volume-control">
+                        <input type="range" id="global-volume" min="0" max="1" step="0.01" value="1">
+                        <span id="volume-value"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/settings.js"></script>
     <script src="js/home.js"></script>
 </body>
 </html>

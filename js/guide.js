@@ -1,3 +1,6 @@
+Settings.load();
+applySettingsToPage();
+
 const pieceData = {
     pawn: {
         image: "img/black-pawn.png",

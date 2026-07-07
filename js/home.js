@@ -1,3 +1,6 @@
+Settings.load();
+applySettingsToPage();
+
 // Animated Quote Typing
 const quotes = [
     "Every chess master was once a beginner.",

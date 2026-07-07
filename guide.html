@@ -3,6 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const saved = JSON.parse(localStorage.getItem("chessSettings") || "{}")
+
+        if (saved.theme) {
+            document.documentElement.classList.add(`theme-${saved.theme}`)
+        }
+        
+        if (saved.darkMode) {
+            document.documentElement.classList.add("dark-mode")
+        }
+    </script>
     <title>Chess Guide</title>
     <link rel="stylesheet" href="css/style.css">
     <link id="favicon" rel="icon" type="image/png" href="img/favico.ico">
@@ -249,7 +260,8 @@
             </div>
         </div>
     </div>
-    
+
+    <script src="js/settings.js"></script>
     <script src="js/guide.js"></script>
 </body>
 </html>

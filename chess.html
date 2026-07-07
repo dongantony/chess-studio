@@ -3,11 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const saved = JSON.parse(localStorage.getItem("chessSettings") || "{}")
+
+        if (saved.theme) {
+            document.documentElement.classList.add(`theme-${saved.theme}`)
+        }
+        
+        if (saved.darkMode) {
+            document.documentElement.classList.add("dark-mode")
+        }
+    </script>
     <title>Chess Board</title>
     <link rel="stylesheet" href="css/style.css">
     <link id="favicon" rel="icon" type="image/png" href="img/favico.ico">
 </head>
 <body>
+    <a id="home-logo" href="home.html" aria-label="Home">
+        <img src="img/white-pawn.png">
+    </a>
     <button id="sidebar-toggle">☰</button>
     <div id="sidebar-overlay"></div>
     <div id="app-layout">
@@ -220,7 +234,8 @@
             </div>
         </div>
     </div>
-    
+
+    <script src="js/settings.js"></script>
     <script src="js/rules.js"></script>
     <script src="js/chess-set.js"></script>
     <script src="js/game.js"></script>

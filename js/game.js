@@ -2,7 +2,7 @@
 // Global Game State
 // =================================================
 
-const board = document.getElementById("chessboard");
+const board = document.getElementById("chessboard")
 let currentTurn = "w"
 let gameOver = false
 let promotionInProgress = false
@@ -21,12 +21,14 @@ let gameStats = {
     promotions: 0
 }
 
-let boardFlipped = false
-let showCoordinates = true
-let showMoveHints = true
-let highlightChecks = true
-let highlightLastMove = true
-let audioVolume = 1
+Settings.load()
+applySettingsToPage()
+let boardFlipped = Settings.get("boardFlipped")
+let showCoordinates = Settings.get("showCoordinates")
+let showMoveHints = Settings.get("showMoveHints")
+let highlightChecks = Settings.get("highlightChecks")
+let highlightLastMove = Settings.get("highlightLastMove")
+let audioVolume = Settings.get("volume")
 
 let gameMode = localStorage.getItem("gameMode") || "human"
 let computerColor = "b"
@@ -249,6 +251,7 @@ function updateRankLabels() {
 
 function flipBoard() {
     boardFlipped = !boardFlipped
+    Settings.set("boardFlipped", boardFlipped)
 
     document.getElementById("flip-board-toggle").checked = boardFlipped;
 
@@ -509,8 +512,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const sidebarToggle = document.getElementById("sidebar-toggle")
     const overlay = document.getElementById("sidebar-overlay")
     const flipButton = document.getElementById("flip-board-toggle")
-    const slider = document.getElementById("volume-slider")
-    const volumeText = document.getElementById("volume-value")
 
     function closeSidebar() {
         sidebar.classList.remove("open")
@@ -536,8 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
         flipBoard();
     })
 
-    slider.value = audioVolume
-    volumeText.textContent = Math.round(audioVolume * 100) + "%"
+    syncChessSettingsUI();
 })
 
 document.querySelectorAll(".tab-btn").forEach(button => {
@@ -559,6 +559,7 @@ document.querySelectorAll(".tab-btn").forEach(button => {
 
 document.getElementById("coordinates-toggle").addEventListener("change", e => {
     showCoordinates = e.target.checked
+    Settings.set("showCoordinates", showCoordinates)
 
     document.getElementById("rank-label").style.display = showCoordinates ? "grid" : "none";
     document.getElementById("file-label").style.display = showCoordinates ? "grid" : "none";
@@ -566,7 +567,7 @@ document.getElementById("coordinates-toggle").addEventListener("change", e => {
 
 document.getElementById("move-hints-toggle").addEventListener("change", e => {
     showMoveHints = e.target.checked
-
+    Settings.set("showMoveHints", showMoveHints)
     clearHighlights()
 
     if(selectedSquare && showMoveHints) {
@@ -576,42 +577,78 @@ document.getElementById("move-hints-toggle").addEventListener("change", e => {
 
 document.getElementById("check-highlight-toggle").addEventListener("change", e => {
     highlightChecks = e.target.checked
-
+    Settings.set("highlightChecks", highlightChecks)
     refreshBoard();
 })
 
 document.getElementById("lastmove-highlight-toggle").addEventListener("change", e => {
     highlightLastMove = e.target.checked
-
+    Settings.set("highlightLastMove", highlightLastMove)
     refreshBoard();
 })
 
 document.getElementById("dark-mode-toggle").addEventListener("change", e => {
-    document.body.classList.toggle("dark-mode", e.target.checked);
+    Settings.set("darkMode", e.target.checked)
+    applySettingsToPage()
 })
 
 document.getElementById("theme-select").addEventListener("change", e => {
-    document.body.classList.remove(
+    document.documentElement.classList.remove(
         "theme-classic",
         "theme-blue",
         "theme-brown",
         "theme-gray"
     )
 
-    document.body.classList.add(`theme-${e.target.value}`)
+    Settings.set("theme", e.target.value)
+    applySettingsToPage()
 })
 
-const volumeSlider = document.getElementById("volume-slider")
-const volumeText = document.getElementById("volume-value")
+window.addEventListener("settingsChanged", (e) => {
+    const s = e.detail
 
-document.getElementById("volume-slider").addEventListener("input", e => {
-    audioVolume = parseFloat(e.target.value)
+    boardFlipped = Settings.get("boardFlipped")
+    showCoordinates = Settings.get("showCoordinates")
+    showMoveHints = Settings.get("showMoveHints")
+    highlightChecks = Settings.get("highlightChecks")
+    highlightLastMove = Settings.get("highlightLastMove")
+    audioVolume = Settings.get("volume")
+    
+    syncChessSettingsUI();
+    refreshBoard();
+});
 
-    const percent = Math.round(audioVolume * 100);
-    volumeText.textContent = percent + "%"
+function syncChessSettingsUI() {
+    document.getElementById("flip-board-toggle").checked =
+        Settings.get("boardFlipped")
 
-    e.target.style.setProperty("--volume", percent);
-})
+    document.getElementById("coordinates-toggle").checked =
+        Settings.get("showCoordinates")
+
+    document.getElementById("move-hints-toggle").checked =
+        Settings.get("showMoveHints")
+
+    document.getElementById("check-highlight-toggle").checked =
+        Settings.get("highlightChecks")
+
+    document.getElementById("lastmove-highlight-toggle").checked =
+        Settings.get("highlightLastMove")
+
+    document.getElementById("dark-mode-toggle").checked =
+        Settings.get("darkMode")
+
+    document.getElementById("theme-select").value =
+        Settings.get("theme")
+
+    const volume = Settings.get("volume")
+    updateVolumeUI(volume)
+
+    document.getElementById("rank-label").style.display =
+        Settings.get("showCoordinates") ? "grid" : "none"
+
+    document.getElementById("file-label").style.display =
+        Settings.get("showCoordinates") ? "grid" : "none"
+}
 
 
 // =================================================
