@@ -261,10 +261,6 @@ body {
     filter: brightness(0.95);
 }
 
-#volume-row {
-    align-items: center;
-}
-
 .volume-control {
     display: flex;
     align-items: center;
@@ -566,20 +562,6 @@ body {
     border-radius: 10px;
     background: linear-gradient(145deg, #e6e6e6, #dcdcdc);
     color: var(--material-text);
-}
-
-#game-info-container {
-    margin-bottom: 20px;
-}
-
-.info-section {
-    margin-top: 15px;
-}
-
-.info-section h3 {
-    margin-bottom: 10px;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 5px;
 }
 
 .info-row {
@@ -1170,6 +1152,7 @@ html.home-page::before {
 .guide-block h4 {
     margin: 0 0 6px;
     color: var(--accent);
+    font-size: 1.1rem;
 }
 
 .guide-block p,
@@ -1241,6 +1224,7 @@ html.home-page::before {
     letter-spacing: 0.5px;
     color: var(--accent);
     margin-bottom: 15px;
+    font-size: 1.1rem;
 }
 
 .tutorial-info {
@@ -1254,7 +1238,7 @@ html.home-page::before {
 .special-rule-card {
     display: grid;
     grid-template-columns: 220px 1fr;
-    gap: 24px;
+    gap: 35px;
     align-items: center;
     padding: 20px;
     border-radius: 16px;
@@ -1280,8 +1264,10 @@ html.home-page::before {
 
 .special-example{
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
+    width: 100%;
 }
 
 .special-target::after {
@@ -1314,6 +1300,7 @@ html.home-page::before {
 .special-info h4{
     margin-top: 0;
     color: var(--accent);
+    font-size: 1.1rem;
 }
 
 .special-info p {
@@ -1566,10 +1553,6 @@ html.home-page::before {
     height: 30px;
 }
 
-#home-logo span {
-    transform: translateY(-2px);
-}
-
 #home-logo:hover {
     transform: scale(1.1);
 
@@ -1578,18 +1561,6 @@ html.home-page::before {
 
 #home-logo:active {
     transform: scale(0.95);
-}
-
-@keyframes settings-pop {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
 }
 
 .settings-header {
@@ -1681,4 +1652,40 @@ html.home-page::before {
         opacity: 1;
         transform: scale(1) translateY(0);
     }
+}
+
+.tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.tip-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 170px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tip-card h5 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 2px;
+    margin-bottom: 10px;
+}
+
+.tip-card p {
+    margin: 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: var(--text);
+    opacity: 0.9;
 }
