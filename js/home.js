@@ -1,7 +1,7 @@
 Settings.load();
 applySettingsToPage();
 
-// Animated Quote Typing
+/* ----- Animated Quote Typing. Cycles through chess quotes using a typewriter effect. ----- */
 const quotes = [
     "Every chess master was once a beginner.",
     "Move in silence, only speak when it's time to say checkmate.",
@@ -53,7 +53,7 @@ function typeQuote() {
 
 typeQuote();
 
-// UI Modals
+/* ----- Game Mode Modal: Handles opening, closing, and navigation within the game mode selection ----- */
 const playButton = document.getElementById("play-game-btn")
 const htpButton = document.getElementById("how-to-play-btn")
 const modal = document.getElementById("game-mode-modal")
@@ -79,6 +79,7 @@ twoPlayerBtn.addEventListener("click", () => {
     window.location.href = "chess.html"
 })
 
+/* ----- Difficulty Screen: Displays the AI difficulty screen and starts computer games. ----- */
 const gameModeScreen = document.getElementById("game-mode-screen")
 const difficultyScreen = document.getElementById("difficulty-screen")
 const backBtn = document.getElementById("back-btn")

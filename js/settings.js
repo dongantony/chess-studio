@@ -1,4 +1,8 @@
-const Settings = {
+/* ==============================================================================================
+   Settings Manager - Handles loading, saving, and accessing user preferences using localStorage. 
+   ============================================================================================== */
+
+   const Settings = {
     data: {
         boardFlipped: false,
         showCoordinates: true,
@@ -31,17 +35,18 @@ const Settings = {
     }
 }
 
+/* ----- Apply Current Settings to the page. Updates theme, dark mode, and notifies other scripts ----- */
 function applySettingsToPage() {
     const s = Settings.data
 
     document.documentElement.classList.remove("theme-classic", "theme-blue", "theme-brown", "theme-gray")
     document.documentElement.classList.add(`theme-${s.theme}`)
-
     document.documentElement.classList.toggle("dark-mode", s.darkMode)
 
     window.dispatchEvent(new CustomEvent("settingsChanged", {detail: s}))
 }
 
+/* ----- Initialize global settings modal controls ----- */
 document.addEventListener("DOMContentLoaded", () => {
     const settingsBtn = document.getElementById("settings-btn")
     if (settingsBtn) {
@@ -93,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 })
 
+/* ----- Opens the settings modal and populates controls with saved values ----- */
 function openSettingsModal() {
     const modal = document.getElementById("global-settings-modal")
     if (!modal) return
@@ -109,6 +115,7 @@ function openSettingsModal() {
     modal.classList.remove("hidden")
 }
 
+/* ----- Close the settings modal ----- */
 function closeSettingsModal() {
     document.getElementById("global-settings-modal").classList.add("hidden")
 }
@@ -117,6 +124,7 @@ let volumeSlider;
 let volumeText;
 let globalVolume;
 
+/* ----- Initializes volume controls for both Home page and Game page ----- */
 document.addEventListener("DOMContentLoaded", () => {
     volumeSlider = document.getElementById("volume-slider")
     volumeText = document.getElementById("volume-value")
@@ -137,6 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateVolumeUI(Settings.get("volume"))
 })
 
+/* ----- Updates all volume sliders and percentage displays. Keeps Home page and Game page synced ----- */
 function updateVolumeUI(value) {
     const percent = Math.round(value * 100)
 

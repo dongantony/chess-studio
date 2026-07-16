@@ -1,6 +1,11 @@
 Settings.load();
 applySettingsToPage();
 
+/* =============================================
+   Chess Piece Information 
+   Stores images, names, values, symbols, and movement descriptions
+   Used in the "How Pieces Move" section.
+   ============================================= */
 const pieceData = {
     pawn: {
         image: "img/black-pawn.png",
@@ -70,6 +75,16 @@ const pieceData = {
     }
 }
 
+/* =============================================
+   Special Rule Demonstrations
+   Board layouts used to illustrate:
+  
+   • Castling
+   • En Passant
+   • Promotion
+  
+   Each array contains the piece positions for a demonstration board.
+   ============================================= */
 const specialData = {
     castleBefore: [
         {piece: "white-rook", row: 7, col: 0},
@@ -234,6 +249,11 @@ const specialData = {
     empty: []
 }
 
+/* =============================================
+   Strategy & Tactic Demonstrations
+   Contains the lesson content shown in the interactive tutorial,
+   including board layouts, highlighted squares, and explanations.
+   ============================================= */
 const demoData = {
     center: {
         title: "Control the Center",
@@ -403,6 +423,8 @@ const demoData = {
     }
 }
 
+// Ordered list of demonstrations used for
+// Previous/Next navigation.
 const demos = [
     "center",
     "development",
@@ -413,14 +435,17 @@ const demos = [
     "discovered"
 ]
 
+/* ----- Page Elements ----- */
 const accordionBtn = document.querySelectorAll(".accordion-header")
 const tabs = document.querySelectorAll(".piece-tab")
 
+/* ----- Navigation controls and tracking for the strategy demonstation ----- */
 let currentDemo = 0
 const demoSelect = document.getElementById("demo-select")
 const prevDemoBtn = document.getElementById("prev-demo")
 const nextDemoBtn = document.getElementById("next-demo")
 
+/* ----- Accordion. Expands and collapses guide sections. ----- */
 accordionBtn.forEach(button => {
     button.addEventListener("click", () => {
         const content = button.nextElementSibling
@@ -437,6 +462,7 @@ accordionBtn.forEach(button => {
     })
 })
 
+/* ----- Piece Viewer. Updates the selected piece information and movement example ----- */
 tabs.forEach(tab => {
     tab.addEventListener("click", () => {
         tabs.forEach(t => t.classList.remove("active"))
@@ -456,6 +482,7 @@ tabs.forEach(tab => {
     })
 })
 
+/* ----- Renders the movement demonstration board for the selected chess piece. ----- */
 function renderMiniBoard(pieceType) {
     const board = document.getElementById("movement-board")
     board.innerHTML = ""
@@ -477,6 +504,7 @@ function renderMiniBoard(pieceType) {
     highlightMoves(pieceType, center)
 }
 
+/* ----- Highlights a single square on the movement demonstration board. ----- */
 function highlightSquare(row, col) {
     if(row < 0 || row > 3 || col < 0 || col > 3) return;
 
@@ -485,6 +513,7 @@ function highlightSquare(row, col) {
     document.querySelectorAll("#movement-board .mini-square")[index].classList.add("mini-target")
 }
 
+/* ----- Highlights every legal movement square for the selected chess piece. ----- */
 function highlightMoves(piece, center) {
     const r = center.row
     const c = center.col
@@ -555,6 +584,7 @@ function highlightMoves(piece, center) {
     }
 }
 
+/* ----- Special Rule Boards. Renders the example boards for castling, en passant, and promotion ----- */
 function renderSpecialBoard(id, pieces, highlights) {
     const board = document.getElementById(id)
     board.innerHTML = ""
@@ -581,6 +611,7 @@ function renderSpecialBoard(id, pieces, highlights) {
     }
 }
 
+/* ----- Strategy Demonstration Boards. Displays interactive tactical and strategic examples ----- */
 function renderDemoBoard(type) {
     const board = document.getElementById("strategy-board")
     board.innerHTML = ""
@@ -615,6 +646,7 @@ function renderDemoBoard(type) {
         .map(item => `<li>${item}</li>`).join("")
 }
 
+// Switches to the selected strategy lesson.
 function setDemo(index) {
     currentDemo = (index + demos.length) % demos.length
     const demo = demos[currentDemo]
@@ -622,6 +654,8 @@ function setDemo(index) {
     renderDemoBoard(demo)
 }
 
+// Strategy Navigation
+// Previous / Next buttons and dropdown selector.
 prevDemoBtn.addEventListener("click", () => {
     setDemo(currentDemo - 1)
 })
@@ -635,6 +669,8 @@ demoSelect.addEventListener("change", () => {
     renderDemoBoard(demoSelect.value)
 })
 
+// Initialization Guide
+// Renders all tutorial boards when the page loads.
 renderMiniBoard("pawn")
 renderSpecialBoard("castle-before", specialData.castleBefore, specialData.castleHighlights)
 renderSpecialBoard("castle-after", specialData.castleAfter, specialData.empty)

@@ -38,6 +38,7 @@ let computerColor = "b"
 // UI Rendering and Updates
 // =============================================
 
+// Renders the chessboard based on the current game state.
 function renderBoard() {
     board.innerHTML = ""
 
@@ -78,6 +79,7 @@ function renderBoard() {
     }
 }
 
+// Dynamically resizes the chessboard to fit the screen.
 function updateBoardSize() {
     const mobileLayout = window.innerWidth <= 1100
 
@@ -95,16 +97,19 @@ function updateBoardSize() {
     document.documentElement.style.setProperty("--square-size", `${squareSize}px`)
 }
 
+// Removes all move and capture highlight indicators.
 function clearHighlights() {
     document.querySelectorAll(".move-hint, .capture-hint").forEach(square => {
         square.classList.remove("move-hint", "capture-hint")
     });
 }
 
+// Returns the HTML element for a specific board square.
 function getSquareElement(row, col) {
         return document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`)
 }
 
+// Displays all legal moves for the selected piece.
 function highlightLegalMoves(from) {
     if(!showMoveHints) return;
 
@@ -135,6 +140,7 @@ function highlightLegalMoves(from) {
     }
 }
 
+// Highlights the king if it is currently in check.
 function highlightCheckedKing() {
     if(!highlightChecks) return;
 
@@ -147,6 +153,7 @@ function highlightCheckedKing() {
     getSquareElement(king.row, king.col)?.classList.add("incheck")
 }
 
+// Highlights the origin and destination of the previous move.
 function highlightLastMoveSquares() {
     if(!highlightLastMove) return;
     if(!lastMoveSquares) return;
@@ -155,18 +162,21 @@ function highlightLastMoveSquares() {
     getSquareElement(lastMoveSquares.to.row, lastMoveSquares.to.col)?.classList.add("last-move-square")
 }
 
+// Re-renders the board and restores all active highlights.
 function refreshBoard() {
     renderBoard();
     highlightLastMoveSquares();
     highlightCheckedKing();
 }
 
+// Clears the current selection and removes move hints.
 function deselectPiece() {
     selectedSquare = null
     clearHighlights();
     refreshBoard();
 }
 
+// Selects a player's piece and displays its legal moves.
 function handlePieceSelection(square, piece, element) {
     if(!piece) return;
     if(piece[0] !== currentTurn) return;
@@ -179,6 +189,7 @@ function handlePieceSelection(square, piece, element) {
     highlightLegalMoves(square);
 }
 
+// Changes the selected piece without deselecting first.
 function switchSelectedPiece(square) {
     selectedSquare = square
 
@@ -188,6 +199,7 @@ function switchSelectedPiece(square) {
     highlightLegalMoves(square);
 }
 
+// Displays the pawn promotion dialog and returns the chosen piece.
 function showPromotionModal(color) {
     promotionInProgress = true
 
@@ -217,6 +229,7 @@ function showPromotionModal(color) {
     })
 }
 
+// Updates file (a-h) labels depending on board orientation.
 function updateFileLabels() {
     const files = boardFlipped 
             ? ["h", "g", "f", "e", "d", "c", "b", "a"]
@@ -233,6 +246,7 @@ function updateFileLabels() {
     })
 }
 
+// Updates rank (1-8) labels depending on board orientation.
 function updateRankLabels() {
     const ranks = boardFlipped 
             ? ["1", "2", "3", "4", "5", "6", "7", "8"]
@@ -249,6 +263,7 @@ function updateRankLabels() {
     })
 }
 
+// Flips the chessboard and updates coordinate labels.
 function flipBoard() {
     boardFlipped = !boardFlipped
     Settings.set("boardFlipped", boardFlipped)
@@ -265,6 +280,7 @@ function flipBoard() {
 // Display / Information Helpers
 // =================================================
 
+// Returns the material value of a chess piece.
 function pieceValue(piece) {
     switch(piece[1]) {
         case "p": 
@@ -282,6 +298,7 @@ function pieceValue(piece) {
     }
 }
 
+// Displays all captured pieces for both players.
 function renderCapturedPieces() {
     const whiteBox = document.querySelector("#captured-white-row") 
     const blackBox = document.querySelector("#captured-black-row") 
@@ -332,6 +349,7 @@ function renderCapturedPieces() {
     renderSide(blackBox, blackCounts, "b")
 }
 
+// Updates the status message shown above the board.
 function updateGameStatus(message = null) {
     const status = document.getElementById("game-status") 
 
@@ -343,6 +361,7 @@ function updateGameStatus(message = null) {
     status.textContent = currentTurn === "w" ? "White's turn" : "Black's turn"
 }
 
+// Refreshes move count, statistics, and fifty-move progress.
 function updateGameInfo() {
     document.getElementById("info-move").textContent = Math.floor(moveHistory.length / 2) + 1
     document.getElementById("info-last-move").textContent = moveHistory.length ? moveHistory[moveHistory.length - 1] : "None"
@@ -371,6 +390,7 @@ function updateGameInfo() {
     }
 }
 
+// Calculates and displays the current material advantage.
 function updateMaterialStatus() {
     const status = document.getElementById("material-status")
 
@@ -389,6 +409,7 @@ function updateMaterialStatus() {
     }
 }
 
+// Counts the number of each captured piece type.=
 function countPieces(list) {
     const map = {}
 
@@ -400,11 +421,13 @@ function countPieces(list) {
     return map;
 }
 
+// Converts board coordinates into chess notation.
 function formatSquares(row, col) {
     const files = ["a", "b", "c", "d", "e", "f", "g", "h"]
     return files[col] + (8 - row);
 }
 
+// Converts a move into algebraic notation and stores it.
 function addMoveToHistory(piece, from, to, capturedPiece, promotionChoice, isCastleMove, isEnPassant) {
     const pieceLetters = {
         p: "",
@@ -456,6 +479,7 @@ function addMoveToHistory(piece, from, to, capturedPiece, promotionChoice, isCas
     renderMoveHistory();
 }
 
+// Displays the complete move history table.
 function renderMoveHistory() {
     const list = document.getElementById("move-history-list")
     list.innerHTML = ""
@@ -498,6 +522,7 @@ function renderMoveHistory() {
     list.scrollTop = list.scrollHeight;
 }
 
+// Returns true if the current game is against the computer.
 function isComputerGame() {
     return gameMode === "computer"
 }
@@ -507,6 +532,7 @@ function isComputerGame() {
 //  Configurations / Event Listeners
 // =================================================
 
+// Initializes sidebar controls and board settings after the page loads.
 document.addEventListener("DOMContentLoaded", () => {
     const sidebar = document.getElementById("sidebar")
     const sidebarToggle = document.getElementById("sidebar-toggle")
@@ -540,6 +566,7 @@ document.addEventListener("DOMContentLoaded", () => {
     syncChessSettingsUI();
 })
 
+// Handles switching between sidebar tabs.
 document.querySelectorAll(".tab-btn").forEach(button => {
     button.addEventListener("click", () => {
 
@@ -618,6 +645,7 @@ window.addEventListener("settingsChanged", (e) => {
     refreshBoard();
 });
 
+// Synchronizes all settings controls with saved preferences.
 function syncChessSettingsUI() {
     document.getElementById("flip-board-toggle").checked =
         Settings.get("boardFlipped")
@@ -655,6 +683,7 @@ function syncChessSettingsUI() {
 //  Rules, Move Handling, and Game State Management
 // =================================================
 
+// Main click handler for selecting pieces and making moves.
 async function handleSquareClick(event) {
     if(gameOver || promotionInProgress) return;
 
@@ -687,15 +716,18 @@ async function handleSquareClick(event) {
     updateGameInfo();
 }
 
+// Returns the board coordinates of the clicked square.
 function getClickedSquare(event) {
     const square = {row: Number(event.currentTarget.dataset.row), col: Number(event.currentTarget.dataset.col)}
     return square;
 }
 
+// Checks if two board positions are identical.
 function isSameSquare(a, b) {
     return a.row === b.row && a.col === b.col;
 }
 
+// Attempts to perform a legal move.
 async function attemptMove(from, to) {
     const piece = gameboard[from.row][from.col]
 
@@ -712,6 +744,7 @@ async function attemptMove(from, to) {
     finishTurn(moveData);
 }
 
+// Collects all information needed before executing a move.
 async function prepareMove(piece, from, to) {
     const isCastleMove = piece[1] === "k" && Math.abs(to.col - from.col) === 2
     const isEnPassant = piece[1] === "p" && Math.abs(to.col - from.col) === 1 && !gameboard[to.row][to.col] &&
@@ -734,6 +767,7 @@ async function prepareMove(piece, from, to) {
     return move;
 }
 
+// Executes every step required to complete a move.
 function executeMove(move) {
     handleCapture(move);
     movePiece(move);
@@ -743,6 +777,7 @@ function executeMove(move) {
     markMoved(move.piece, move.from);
 }
 
+// Handles standard piece captures.
 function handleCapture(move) {
     const captured = move.capturedPiece
 
@@ -759,11 +794,13 @@ function handleCapture(move) {
     gameStats.captures++
 }
 
+// Moves the selected piece on the board.
 function movePiece(move) {
     gameboard[move.to.row][move.to.col] = move.piece
     gameboard[move.from.row][move.from.col] = null
 }
 
+// Replaces a pawn with the selected promotion piece.
 function handlePromotion(move) {
     if(move.piece[1] === "p" && move.promotionChoice) {
         gameboard[move.to.row][move.to.col] = move.piece[0] + move.promotionChoice
@@ -771,6 +808,7 @@ function handlePromotion(move) {
     }
 }
 
+// Executes an en passant capture.
 function handleEnPassant(move) {
     if(!move.isEnPassant) return;
 
@@ -789,6 +827,7 @@ function handleEnPassant(move) {
     gameboard[move.from.row][move.to.col] = null
 }
 
+// Moves the rook during castling.
 function handleCastling(move) {
     if(!move.isCastleMove) return;
 
@@ -810,6 +849,7 @@ function handleCastling(move) {
     gameStats.castles++
 }
 
+// Removes castling rights when a rook is captured.
 function updateCastlingRightsOnCapture(capturedPiece, square) {
     if(capturedPiece?.[1] !== "r") return;
     
@@ -821,6 +861,7 @@ function updateCastlingRightsOnCapture(capturedPiece, square) {
     if(capturedPiece === "br" && row === 0 && col === 7) hasMoved.bkr = true;
 }
 
+// Ends the current player's turn and checks for game-ending conditions.
 function finishTurn(move) {
     playMoveSound(move);
 
@@ -835,6 +876,7 @@ function finishTurn(move) {
     }
 } 
 
+// Records move history and updates tracking information.
 function updateMoveTracking(move) {
     const capturedPieceFinal  = move.isEnPassant ? move.enPassantCapturedPiece : move.capturedPiece
 
@@ -846,6 +888,7 @@ function updateMoveTracking(move) {
     updateHalfMoveClock(move);
 }
 
+// Updates the fifty-move rule counter.
 function updateHalfMoveClock(move) {
     if(move.piece[1] === "p" || move.capturedPiece || move.isEnPassant) {
         halfMoveClock = 0
@@ -855,6 +898,7 @@ function updateHalfMoveClock(move) {
     }
 }
 
+// Checks for checkmate, stalemate, and all draw conditions.
 function checkGameEndingConditions() {
     if(isCheckmate(currentTurn)) {
         gameOver = true
@@ -896,6 +940,7 @@ function checkGameEndingConditions() {
 //  Audio System
 // =================================================
 
+// Chooses the correct sound effect for the current move.
 function playMoveSound(move) {
     let soundsToPlay = sounds.move
 
@@ -918,6 +963,7 @@ function playMoveSound(move) {
     playSound(soundsToPlay);
 }
 
+// Plays an audio clip using the current volume setting.
 function playSound(sound) {
     if(audioVolume == 0) return;
 
@@ -930,6 +976,7 @@ function playSound(sound) {
 //  Computer Mode
 // =================================================
 
+// Generates every legal move available for the specified color.
 function getAllLegalMoves(color) {
     const moves = []
 
@@ -956,6 +1003,7 @@ function getAllLegalMoves(color) {
     return moves;
 }
 
+// Performs a random legal move for the computer opponent.
 async function makeComputerMove() {
     if(gameOver) return;
 

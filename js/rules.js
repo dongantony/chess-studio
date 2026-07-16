@@ -7,10 +7,12 @@ let hasMoved = {
     bqr: false
 }
 
-// =============================================
-// Move Validation
-// =============================================
+/* =============================================
+   Move Validation
+   ============================================= */
 
+// Tracks whether each king and rook has moved.
+// Used to determine if castling is still legal.
 function isValidMove(piece, from, to) {
     switch(piece[1]) {
         
@@ -32,10 +34,12 @@ function isValidMove(piece, from, to) {
 }
 
 
-// =============================================
-// Attack Logic (Check System)
-// =============================================
+/* =============================================
+   Attack Logic (Check System)
+   ============================================= */
 
+// Checks whether a square is currently attacked
+// by any piece of the specified color.
 function isSquareAttacked(row, col, attackerColor) {
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
@@ -56,6 +60,8 @@ function isSquareAttacked(row, col, attackerColor) {
     return false;
 } 
 
+// Determines if a piece attacks a square without
+// considering whether its own king is left in check.
 function isPseudoLegalAttack(piece, from, to) {
     const target = gameboard[to.row][to.col]
 
@@ -83,16 +89,18 @@ function isPseudoLegalAttack(piece, from, to) {
 }
 
 
-// =============================================
-// Chess Piece Attack and Movement Logic
-// =============================================
+/* =============================================
+   Chess Piece Attack and Movement Logic
+   ============================================= */
 
+// Returns whether a pawn attacks the destination square.
 function canPawnAttack(piece, from, to) {
     const direction = piece[0] === "w" ? -1 : 1
     
     return (Math.abs(to.col - from.col) === 1 && to.row === from.row + direction);
 }
 
+// Returns whether a knight attacks the destination square.
 function canKnightAttack(from, to) {
     const rowDiff = Math.abs(to.row - from.row)
     const colDiff = Math.abs(to.col - from.col)
@@ -100,18 +108,22 @@ function canKnightAttack(from, to) {
     return ((rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2));
 }
 
+// Returns whether a bishop attacks the destination square.
 function canBishopAttack(from, to) {
     return Math.abs(to.row - from.row) === Math.abs(to.col - from.col);
 }
 
+// Returns whether a rook attacks the destination square.
 function canRookAttack(from, to) {
     return (to.row === from.row) || (to.col === from.col);
 }
 
+// Returns whether a queen attacks the destination square.
 function canQueenAttack(from, to) {
     return (canBishopAttack(from, to) || canRookAttack(from, to));
 }
 
+// Returns whether a king attacks the destination square.
 function canKingAttack(from, to) {
     const rowDiff = Math.abs(to.row - from.row) 
     const colDiff = Math.abs(to.col - from.col)
@@ -119,6 +131,11 @@ function canKingAttack(from, to) {
     return (rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0));
 }
 
+// Validates all pawn movement including:
+// • Single move
+// • Double move
+// • Captures
+// • En passant
 function isValidPawnMove(piece, from, to) {
     const direction = piece[0] === "w" ? -1 : 1
     const target = gameboard[to.row][to.col]
@@ -156,6 +173,7 @@ function isValidPawnMove(piece, from, to) {
     return false;
 }
 
+// Validates knight movement.
 function isValidKnightMove(piece, from, to) {
     const target = gameboard[to.row][to.col]
 
@@ -166,6 +184,8 @@ function isValidKnightMove(piece, from, to) {
     return canKnightAttack(from, to)
 }
 
+// Validates bishop movement and ensures
+// no pieces block its path.
 function isValidBishopMove(piece, from, to) {
     const target = gameboard[to.row][to.col]
 
@@ -180,6 +200,8 @@ function isValidBishopMove(piece, from, to) {
     return isPathClear(from, to);
 }
 
+// Validates rook movement and ensures
+// no pieces block its path.
 function isValidRookMove(piece, from , to) {
     const target = gameboard[to.row][to.col]
 
@@ -194,10 +216,12 @@ function isValidRookMove(piece, from , to) {
     return isPathClear(from, to);
 }
 
+// Queen movement combines rook and bishop movement.
 function isValidQueenMove(piece, from, to) {
     return isValidBishopMove(piece, from, to) || isValidRookMove(piece, from, to);
 }
 
+// Validates king movement including castling.
 function isValidKingMove(piece, from, to) {
     const target = gameboard[to.row][to.col]
     
@@ -220,10 +244,12 @@ function isValidKingMove(piece, from, to) {
 }
 
 
-// =============================================
-// Special Moves (Castling, En Passant, Promotion)
-// =============================================
+/* =============================================
+   Special Moves (Castling, En Passant, Promotion)
+   ============================================= */
 
+// Determines whether castling is currently legal
+// on either the king-side or queen-side.
 function canCastle(piece, from, to) {
     const color = piece[0]
     const row = color === "w" ? 7 : 0
@@ -286,6 +312,8 @@ function canCastle(piece, from, to) {
     return false;
 }
 
+// Displays the promotion dialog when a pawn
+// reaches the final rank.
 async function promotePawn(piece, to) {
     if(piece[1] !== "p") return null;
     
@@ -299,14 +327,17 @@ async function promotePawn(piece, to) {
 }
 
 
-// =============================================
-// Helper Functions
-// =============================================
+/* =============================================
+   Helper Functions
+   ============================================= */
 
+// Returns true if both pieces belong to the same player.
 function isFriendly(piece, target) {
     return target && target[0] === piece[0];
 }
 
+// Checks whether every square between the start
+// and destination is empty.
 function isPathClear(from, to) {
     const rowStep = Math.sign(to.row - from.row)
     const colStep = Math.sign(to.col - from.col)
@@ -327,6 +358,7 @@ function isPathClear(from, to) {
     return true;
 }
 
+// Returns a list of every piece currently on the board.
 function getPieces() {
     const pieces = []
 
@@ -344,22 +376,27 @@ function getPieces() {
 }
 
 
-// =============================================
-// Check, Checkmate, Stalemate, and Insufficient Material Detection
-// =============================================
+/* =============================================
+   Check, Checkmate, Stalemate, and Insufficient Material Detection
+   ============================================= */
 
+// Returns true if the specified player is checkmated.
 function isCheckmate(color) {
     return isKingInCheck(color) && !hasLegalMoves(color);
 }
 
+// Returns true if the specified player has no legal
+// moves but is not in check.
 function isStalemate(color) {
     return !isKingInCheck(color) && !hasLegalMoves(color);
 }
 
+// Returns whether a piece is a king.
 function isKing(piece) {
     return piece && piece[1] === "k";
 }
 
+// Finds and returns the king's position.
 function findKing(color) {
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -374,6 +411,8 @@ function findKing(color) {
     return null;
 }
 
+// Determines whether the specified king
+// is currently under attack.
 function isKingInCheck(color) {
     const kingPosition = findKing(color) 
     const enemyColor = color === "w" ? "b" : "w"
@@ -385,6 +424,8 @@ function isKingInCheck(color) {
     return isSquareAttacked(kingPosition.row, kingPosition.col, enemyColor)
 }
 
+// Simulates a move to determine whether
+// it would expose the player's king to check.
 function wouldLeaveKingInCheck(piece, from, to) {
     const captured = gameboard[to.row][to.col]
     let enPassantCaptured = null
@@ -413,10 +454,13 @@ function wouldLeaveKingInCheck(piece, from, to) {
     return isCheck;
 }
 
+// Determines whether a board square is light colored.
 function isLightSquare(row, col) {
     return (row + col) % 2 === 0;
 }
 
+// Detects draw positions caused by
+// insufficient mating material.
 function isInsufficientMaterial() {
     const pieces = getPieces()
 
@@ -452,6 +496,8 @@ function isInsufficientMaterial() {
     return false;
 }
 
+// Creates a unique key representing the
+// current board state for repetition detection.
 function getPositionKey() {
     const enPassantSquare = lastMove && lastMove.piece[1] === "p" &&
                             Math.abs(lastMove.from.row - lastMove.to.row) === 2 ?
@@ -460,6 +506,7 @@ function getPositionKey() {
     return JSON.stringify({board: gameboard, turn: currentTurn, castling: hasMoved, enPassant: enPassantSquare});
 }
 
+// Detects threefold repetition.
 function isThreefoldRepetition() {
     const current = getPositionKey()
     let count = 0
@@ -478,14 +525,18 @@ function isThreefoldRepetition() {
 }
 
 
-// =============================================
-// Move Legality and Game State Helpers
-// =============================================
+/* =============================================
+   Move Legality and Game State Helpers
+   ============================================= */
 
+// Returns whether a move is completely legal,
+// including king safety.
 function isLegalMove(piece, from, to) {
     return isValidMove(piece, from, to) && !wouldLeaveKingInCheck(piece, from, to);
 }
 
+// Determines whether the specified player
+// has at least one legal move remaining.
 function hasLegalMoves(color) {
     for (let fromRow = 0; fromRow < 8; fromRow++) {
         for (let fromCol = 0; fromCol < 8; fromCol++) {
@@ -511,6 +562,8 @@ function hasLegalMoves(color) {
     return false;
 }
 
+// Records whether a king or rook has moved,
+// permanently affecting castling rights.
 function markMoved(piece, from) {
     if(!piece) {
         return;
